@@ -6,27 +6,21 @@ let myGameId = null;
 let myName = '';
 let selectedCards = new Set();
 let botDifficulty = 'medium';
-let pendingImposedSuit = null;
 
 // ===== INITIALISATION =====
-document.addEventListener('DOMContentLoaded', () => {
-    // Restaurer le nom
+document.addEventListener('DOMContentLoaded', function() {
     const savedName = localStorage.getItem('playerName');
     if (savedName) {
         document.getElementById('playerName').value = savedName;
     }
 
-    // Vérifier si un gameId est dans l'URL
     const urlParams = new URLSearchParams(window.location.search);
     const gameFromUrl = urlParams.get('game');
     if (gameFromUrl) {
         document.getElementById('gameCodeInput').value = gameFromUrl;
     }
 
-    // Événements
     setupEventListeners();
-
-    // Connexion socket
     initSocket();
 });
 
@@ -37,110 +31,111 @@ function setupEventListeners() {
     document.getElementById('joinGameBtn').addEventListener('click', joinGame);
     document.getElementById('startGameBtn').addEventListener('click', startGame);
     document.getElementById('copyCodeBtn').addEventListener('click', copyGameCode);
-    document.getElementById('playSelectedBtn').addEventListener('click', playSelectedCards);
+    document.getElementById('playSelectedBtn').addEventListener('click', function() { playSelectedCards(); });
     document.getElementById('drawCardBtn').addEventListener('click', drawCard);
     document.getElementById('bankDisplay').addEventListener('click', drawCard);
     document.getElementById('leaveGameBtn').addEventListener('click', leaveGame);
     document.getElementById('backToLobbyBtn').addEventListener('click', leaveGame);
-    document.getElementById('rulesBtn').addEventListener('click', () => openModal('rulesModal'));
+    document.getElementById('rulesBtn').addEventListener('click', function() { openModal('rulesModal'); });
     document.getElementById('logHeader').addEventListener('click', toggleLog);
     document.getElementById('addBotBtn').addEventListener('click', addBot);
-    document.getElementById('botDifficulty').addEventListener('change', (e) => {
+    document.getElementById('botDifficulty').addEventListener('change', function(e) {
         botDifficulty = e.target.value;
     });
 
-    // Modal suit
-    document.querySelectorAll('.suit-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+    document.querySelectorAll('.suit-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
             const suit = btn.dataset.suit;
             closeModal('suitModal');
             playSelectedCards(suit);
         });
     });
 
-    // Fermer les modals en cliquant à l'extérieur
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('active');
-            }
+    document.querySelectorAll('.modal').forEach(function(modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) modal.classList.remove('active');
         });
     });
 }
 
 // ===== SOCKET =====
 function initSocket() {
-    socket = io();
+    socket = io({
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 1000
+    });
 
-    socket.on('connect', () => {
+    socket.on('connect', function() {
         console.log('✅ Connecté au serveur');
         myPlayerId = socket.id;
     });
 
-    socket.on('gameCreated', ({ gameId, playerId, game }) => {
-        myGameId = gameId;
-        myPlayerId = playerId;
-        currentGame = game;
+    socket.on('gameCreated', function(data) {
+        myGameId = data.gameId;
+        myPlayerId = data.playerId;
+        currentGame = data.game;
         showScreen('waitingScreen');
         updateWaitingScreen();
         showNotification('✅ Partie créée !', 'success');
     });
 
-    socket.on('gameJoined', ({ gameId, playerId, game }) => {
-        myGameId = gameId;
-        myPlayerId = playerId;
-        currentGame = game;
+    socket.on('gameJoined', function(data) {
+        myGameId = data.gameId;
+        myPlayerId = data.playerId;
+        currentGame = data.game;
         showScreen('waitingScreen');
         updateWaitingScreen();
         showNotification('✅ Partie rejointe !', 'success');
     });
 
-    socket.on('playerJoined', ({ players, game }) => {
-        currentGame = game;
+    socket.on('playerJoined', function(data) {
+        currentGame = data.game;
         updateWaitingScreen();
     });
 
-    socket.on('playerLeft', ({ players, game }) => {
-        if (game) currentGame = game;
+    socket.on('playerLeft', function(data) {
+        if (data.game) currentGame = data.game;
         showNotification('Un joueur a quitté la partie');
         updateWaitingScreen();
     });
 
-    socket.on('gameStarted', ({ game }) => {
-        currentGame = game;
+    socket.on('gameStarted', function(data) {
+        currentGame = data.game;
         showScreen('gameScreen');
         renderGame();
         showNotification('🎮 La partie commence !', 'success');
     });
 
-    socket.on('gameUpdate', ({ game }) => {
-        currentGame = game;
+    socket.on('gameUpdate', function(data) {
+        currentGame = data.game;
         selectedCards.clear();
         renderGame();
     });
 
-    socket.on('cardsDrawn', ({ cards }) => {
-        if (cards && cards.length > 0) {
-            showNotification(`📥 Vous avez pioché ${cards.length} carte(s)`);
+    socket.on('cardsDrawn', function(data) {
+        if (data.cards && data.cards.length > 0) {
+            showNotification('📥 Vous avez pioché ' + data.cards.length + ' carte(s)');
         }
     });
 
-    socket.on('error', ({ message }) => {
-        showNotification(`❌ ${message}`, 'error');
+    socket.on('error', function(data) {
+        showNotification('❌ ' + data.message, 'error');
     });
 
-    socket.on('playerDisconnected', ({ playerName }) => {
-        showNotification(`⚠️ ${playerName} s'est déconnecté`);
+    socket.on('playerDisconnected', function(data) {
+        showNotification('⚠️ ' + data.playerName + " s'est déconnecté");
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', function() {
         console.log('❌ Déconnecté du serveur');
     });
 }
 
 // ===== SCREENS =====
 function showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
     document.getElementById(screenId).classList.add('active');
 }
 
@@ -171,10 +166,10 @@ function joinGame() {
 
     myName = name;
     localStorage.setItem('playerName', name);
-    socket.emit('joinGame', { gameId, playerName: name });
+    socket.emit('joinGame', { gameId: gameId, playerName: name });
 }
 
-// ===== PARTIE RAPIDE CONTRE L'IA =====
+// ===== PARTIE RAPIDE =====
 function quickPlay() {
     const name = document.getElementById('playerName').value.trim();
     if (!name) {
@@ -185,21 +180,16 @@ function quickPlay() {
     myName = name;
     localStorage.setItem('playerName', name);
 
-    // Créer la partie
-    socket.emit('createGame', { playerName: name, maxPlayers: 4 });
-
-    // Ajouter les bots dès que la partie est créée
-    const handleCreated = () => {
+    const handleCreated = function() {
         socket.off('gameCreated', handleCreated);
 
-        // Ajouter 3 bots avec difficultés croissantes
-        setTimeout(() => {
+        setTimeout(function() {
             socket.emit('addBot', { gameId: myGameId, difficulty: 'easy' });
-            setTimeout(() => {
+            setTimeout(function() {
                 socket.emit('addBot', { gameId: myGameId, difficulty: 'medium' });
-                setTimeout(() => {
+                setTimeout(function() {
                     socket.emit('addBot', { gameId: myGameId, difficulty: 'hard' });
-                    setTimeout(() => {
+                    setTimeout(function() {
                         socket.emit('startGame', { gameId: myGameId });
                     }, 600);
                 }, 400);
@@ -208,6 +198,7 @@ function quickPlay() {
     };
 
     socket.on('gameCreated', handleCreated);
+    socket.emit('createGame', { playerName: name, maxPlayers: 4 });
 }
 
 // ===== SALLE D'ATTENTE =====
@@ -219,24 +210,23 @@ function updateWaitingScreen() {
     document.getElementById('maxPlayers').textContent = currentGame.maxPlayers;
 
     const list = document.getElementById('waitingPlayersList');
-    list.innerHTML = currentGame.players.map(p => `
-    <div class="player-item ${p.id === currentGame.hostId ? 'host' : ''} ${p.isBot ? 'bot' : ''}">
-      <span>${escapeHtml(p.name)}</span>
-      ${p.isBot ? `<span class="bot-badge">🤖 ${p.botDifficulty || 'bot'}</span>` : ''}
-      ${p.id === myPlayerId ? '<span style="color:var(--primary);font-size:12px;">(vous)</span>' : ''}
-      ${p.isBot && currentGame.hostId === myPlayerId ?
-        `<button onclick="removeBot('${p.id}')" style="margin-left:auto;background:none;border:none;color:var(--danger);cursor:pointer;font-size:18px;">×</button>`
-        : ''}
-    </div>
-  `).join('');
+    list.innerHTML = currentGame.players.map(function(p) {
+        let html = '<div class="player-item ' + (p.id === currentGame.hostId ? 'host' : '') + ' ' + (p.isBot ? 'bot' : '') + '">';
+        html += '<span>' + escapeHtml(p.name) + '</span>';
+        if (p.isBot) html += '<span class="bot-badge">🤖 ' + (p.botDifficulty || 'bot') + '</span>';
+        if (p.id === myPlayerId) html += '<span style="color:var(--primary);font-size:12px;">(vous)</span>';
+        if (p.isBot && currentGame.hostId === myPlayerId) {
+            html += '<button onclick="removeBot(\'' + p.id + '\')" style="margin-left:auto;background:none;border:none;color:var(--danger);cursor:pointer;font-size:18px;">×</button>';
+        }
+        html += '</div>';
+        return html;
+    }).join('');
 
-    // Contrôles de bot
     const botControls = document.getElementById('botControls');
     botControls.style.display =
         (currentGame.hostId === myPlayerId && currentGame.players.length < currentGame.maxPlayers)
             ? 'flex' : 'none';
 
-    // Bouton démarrer
     const startBtn = document.getElementById('startGameBtn');
     const message = document.getElementById('waitingMessage');
 
@@ -249,14 +239,14 @@ function updateWaitingScreen() {
         message.style.display = 'block';
     } else {
         startBtn.style.display = 'none';
-        message.textContent = 'En attente du démarrage par l\'hôte...';
+        message.textContent = "En attente du démarrage par l'hôte...";
         message.style.display = 'block';
     }
 }
 
 function copyGameCode() {
     if (!currentGame) return;
-    navigator.clipboard.writeText(currentGame.id).then(() => {
+    navigator.clipboard.writeText(currentGame.id).then(function() {
         showNotification('📋 Code copié !', 'success');
     });
 }
@@ -270,7 +260,7 @@ function startGame() {
 function addBot() {
     if (!currentGame) return;
     if (currentGame.hostId !== myPlayerId) {
-        showNotification('Seul l\'hôte peut ajouter des bots', 'error');
+        showNotification("Seul l'hôte peut ajouter des bots", 'error');
         return;
     }
     if (currentGame.players.length >= currentGame.maxPlayers) {
@@ -278,15 +268,12 @@ function addBot() {
         return;
     }
 
-    socket.emit('addBot', {
-        gameId: currentGame.id,
-        difficulty: botDifficulty
-    });
+    socket.emit('addBot', { gameId: currentGame.id, difficulty: botDifficulty });
 }
 
 function removeBot(botId) {
     if (!currentGame) return;
-    socket.emit('removeBot', { gameId: currentGame.id, botId });
+    socket.emit('removeBot', { gameId: currentGame.id, botId: botId });
 }
 
 window.removeBot = removeBot;
@@ -295,51 +282,38 @@ window.removeBot = removeBot;
 function renderGame() {
     if (!currentGame) return;
 
-    // Header
     document.getElementById('gameCodeDisplay').textContent = currentGame.id;
     document.getElementById('gameStatus').textContent =
         currentGame.status === 'playing' ? '🟢 En cours' :
             currentGame.status === 'finished' ? '🏁 Terminée' : '⏳ En attente';
 
-    // Adversaires
     renderOpponents();
-
-    // Carte centrale
     renderCenterCard();
 
-    // Banque
-    document.getElementById('bankCount').textContent = `${currentGame.bankCount} cartes`;
-    document.getElementById('pileCount').textContent = `${currentGame.pileCount} cartes`;
+    document.getElementById('bankCount').textContent = currentGame.bankCount + ' cartes';
+    document.getElementById('pileCount').textContent = currentGame.pileCount + ' cartes';
 
-    // Tour
     renderTurnInfo();
-
-    // Ma main
     renderMyHand();
-
-    // Journal
     renderLog();
 
-    // PendingDraw
     const pendingDisplay = document.getElementById('pendingDrawDisplay');
     if (currentGame.pendingDraw > 0) {
         pendingDisplay.style.display = 'block';
-        pendingDisplay.textContent = `⚠️ ${currentGame.pendingDraw} cartes en attente !`;
+        pendingDisplay.textContent = '⚠️ ' + currentGame.pendingDraw + ' cartes en attente !';
     } else {
         pendingDisplay.style.display = 'none';
     }
 
-    // Couleur imposée
     const imposedDisplay = document.getElementById('imposedSuitDisplay');
     if (currentGame.imposedSuit) {
         const symbols = { pique: '♠', carreau: '♦', coeur: '♥', trefle: '♣' };
         imposedDisplay.style.display = 'block';
-        imposedDisplay.textContent = `🎭 Couleur imposée : ${symbols[currentGame.imposedSuit]} ${currentGame.imposedSuit}`;
+        imposedDisplay.textContent = '🎭 Couleur imposée : ' + symbols[currentGame.imposedSuit] + ' ' + currentGame.imposedSuit;
     } else {
         imposedDisplay.style.display = 'none';
     }
 
-    // Fin de partie
     if (currentGame.status === 'finished') {
         showGameOver();
     }
@@ -347,26 +321,28 @@ function renderGame() {
 
 function renderOpponents() {
     const zone = document.getElementById('opponentsZone');
-    const opponents = currentGame.players.filter(p => p.id !== myPlayerId);
+    const opponents = currentGame.players.filter(function(p) { return p.id !== myPlayerId; });
 
     if (opponents.length === 0) {
         zone.innerHTML = '';
         return;
     }
 
-    zone.innerHTML = opponents.map(p => {
+    zone.innerHTML = opponents.map(function(p) {
         const isCurrent = p.id === currentGame.currentPlayerId;
-        const miniCards = Array(Math.min(p.cardCount, 8)).fill('<div class="mini-card"></div>').join('');
+        let miniCards = '';
+        for (let i = 0; i < Math.min(p.cardCount, 8); i++) {
+            miniCards += '<div class="mini-card"></div>';
+        }
 
-        return `
-      <div class="opponent ${isCurrent ? 'current' : ''} ${!p.isConnected ? 'disconnected' : ''} ${p.rank ? 'finished' : ''} ${p.isBot ? 'bot-opponent' : ''}">
-        <div class="opponent-name">${escapeHtml(p.name)}</div>
-        ${p.isBot ? `<div class="opponent-bot-badge">🤖 ${p.botDifficulty || 'bot'}</div>` : ''}
-        <div class="opponent-cards">🖐️ ${p.cardCount} cartes</div>
-        ${p.rank ? `<div class="opponent-rank">🏆 ${p.rank}${p.rank === 1 ? 'er' : 'ème'}</div>` : ''}
-        <div class="mini-cards">${miniCards}</div>
-      </div>
-    `;
+        let html = '<div class="opponent ' + (isCurrent ? 'current' : '') + ' ' + (!p.isConnected ? 'disconnected' : '') + ' ' + (p.rank ? 'finished' : '') + ' ' + (p.isBot ? 'bot-opponent' : '') + '">';
+        html += '<div class="opponent-name">' + escapeHtml(p.name) + '</div>';
+        if (p.isBot) html += '<div class="opponent-bot-badge">🤖 ' + (p.botDifficulty || 'bot') + '</div>';
+        html += '<div class="opponent-cards">🖐️ ' + p.cardCount + ' cartes</div>';
+        if (p.rank) html += '<div class="opponent-rank">🏆 ' + p.rank + (p.rank === 1 ? 'er' : 'ème') + '</div>';
+        html += '<div class="mini-cards">' + miniCards + '</div>';
+        html += '</div>';
+        return html;
     }).join('');
 }
 
@@ -380,30 +356,30 @@ function renderCenterCard() {
     }
 
     display.innerHTML = renderCardHTML(card);
-    display.className = `card center-card ${card.type === 'joker' ? 'joker' : card.color}`;
+    display.className = 'card center-card ' + (card.type === 'joker' ? 'joker' : card.color);
 }
 
 function renderTurnInfo() {
     const indicator = document.getElementById('currentPlayerIndicator');
     const isMyTurn = currentGame.currentPlayerId === myPlayerId;
-    const me = currentGame.players.find(p => p.id === myPlayerId);
+    const me = currentGame.players.find(function(p) { return p.id === myPlayerId; });
 
-    if (me?.rank) {
-        indicator.textContent = `🏆 Vous avez terminé ${me.rank}${me.rank === 1 ? 'er' : 'ème'} !`;
+    if (me && me.rank) {
+        indicator.textContent = '🏆 Vous avez terminé ' + me.rank + (me.rank === 1 ? 'er' : 'ème') + ' !';
         indicator.classList.remove('my-turn');
     } else if (isMyTurn) {
         indicator.textContent = '✨ À vous de jouer !';
         indicator.classList.add('my-turn');
     } else {
-        const currentPlayer = currentGame.players.find(p => p.id === currentGame.currentPlayerId);
-        indicator.textContent = `⏳ Tour de ${currentPlayer?.name || '?'}`;
+        const currentPlayer = currentGame.players.find(function(p) { return p.id === currentGame.currentPlayerId; });
+        indicator.textContent = '⏳ Tour de ' + (currentPlayer ? currentPlayer.name : '?');
         indicator.classList.remove('my-turn');
     }
 }
 
 function renderMyHand() {
-    const me = currentGame.players.find(p => p.id === myPlayerId);
-    const hand = me?.hand || [];
+    const me = currentGame.players.find(function(p) { return p.id === myPlayerId; });
+    const hand = (me && me.hand) ? me.hand : [];
     const container = document.getElementById('myHand');
 
     document.getElementById('myCardCount').textContent = hand.length;
@@ -415,21 +391,16 @@ function renderMyHand() {
     }
 
     const isMyTurn = currentGame.currentPlayerId === myPlayerId;
-    const canPlay = isMyTurn && !me?.rank;
+    const canPlay = isMyTurn && !(me && me.rank);
 
-    container.innerHTML = hand.map(card => {
+    container.innerHTML = hand.map(function(card) {
         const playable = canPlay && isCardPlayable(card);
         const selected = selectedCards.has(card.id);
 
-        return `
-      <div class="hand-card ${selected ? 'selected' : ''} ${playable ? 'playable' : 'not-playable'}"
-           data-card-id="${card.id}"
-           onclick="toggleCardSelection('${card.id}')">
-        <div class="card ${card.type === 'joker' ? 'joker' : card.color}">
-          ${renderCardHTML(card)}
-        </div>
-      </div>
-    `;
+        return '<div class="hand-card ' + (selected ? 'selected' : '') + ' ' + (playable ? 'playable' : 'not-playable') + '" data-card-id="' + card.id + '" onclick="toggleCardSelection(\'' + card.id + '\')">' +
+            '<div class="card ' + (card.type === 'joker' ? 'joker' : card.color) + '">' +
+            renderCardHTML(card) +
+            '</div></div>';
     }).join('');
 
     updatePlayButton();
@@ -437,24 +408,16 @@ function renderMyHand() {
 
 function renderCardHTML(card) {
     if (card.type === 'joker') {
-        return `
-      <div class="card-corner top-left">🃏</div>
-      <div class="card-symbol">${card.jokerColor === 'rouge' ? '🔴' : '⚫'}</div>
-      <div class="card-rank">JOKER</div>
-      <div class="card-corner bottom-right">🃏</div>
-    `;
+        return '<div class="card-corner top-left">🃏</div>' +
+            '<div class="card-symbol">' + (card.jokerColor === 'rouge' ? '🔴' : '⚫') + '</div>' +
+            '<div class="card-rank">JOKER</div>' +
+            '<div class="card-corner bottom-right">🃏</div>';
     }
 
-    return `
-    <div class="card-corner top-left">
-      ${card.rank}<br>${card.symbol}
-    </div>
-    <div class="card-symbol">${card.symbol}</div>
-    <div class="card-rank">${card.rank}</div>
-    <div class="card-corner bottom-right">
-      ${card.rank}<br>${card.symbol}
-    </div>
-  `;
+    return '<div class="card-corner top-left">' + card.rank + '<br>' + card.symbol + '</div>' +
+        '<div class="card-symbol">' + card.symbol + '</div>' +
+        '<div class="card-rank">' + card.rank + '</div>' +
+        '<div class="card-corner bottom-right">' + card.rank + '<br>' + card.symbol + '</div>';
 }
 
 function isCardPlayable(card) {
@@ -476,15 +439,14 @@ function isCardPlayable(card) {
 }
 
 function toggleCardSelection(cardId) {
-    const me = currentGame.players.find(p => p.id === myPlayerId);
-    const hand = me?.hand || [];
-    const card = hand.find(c => c.id === cardId);
+    const me = currentGame.players.find(function(p) { return p.id === myPlayerId; });
+    const hand = (me && me.hand) ? me.hand : [];
+    const card = hand.find(function(c) { return c.id === cardId; });
 
     if (!card || !isCardPlayable(card)) return;
 
-    // Vérifier la règle : plusieurs cartes du même rang
     if (selectedCards.size > 0) {
-        const firstCard = hand.find(c => c.id === [...selectedCards][0]);
+        const firstCard = hand.find(function(c) { return c.id === Array.from(selectedCards)[0]; });
         if (firstCard.rank !== card.rank) {
             selectedCards.clear();
             selectedCards.add(cardId);
@@ -504,24 +466,25 @@ function toggleCardSelection(cardId) {
 
 function updatePlayButton() {
     const btn = document.getElementById('playSelectedBtn');
-    const me = currentGame.players.find(p => p.id === myPlayerId);
+    const me = currentGame.players.find(function(p) { return p.id === myPlayerId; });
     const isMyTurn = currentGame.currentPlayerId === myPlayerId;
     const hasSelection = selectedCards.size > 0;
 
-    btn.disabled = !isMyTurn || !hasSelection || !!me?.rank;
+    btn.disabled = !isMyTurn || !hasSelection || !!(me && me.rank);
 }
 
 // ===== JOUER =====
-function playSelectedCards(imposedSuit = null) {
+function playSelectedCards(imposedSuit) {
     if (selectedCards.size === 0) return;
 
-    const me = currentGame.players.find(p => p.id === myPlayerId);
-    const hand = me?.hand || [];
-    const selectedArray = [...selectedCards];
-    const selectedCardObjects = selectedArray.map(id => hand.find(c => c.id === id));
+    const me = currentGame.players.find(function(p) { return p.id === myPlayerId; });
+    const hand = (me && me.hand) ? me.hand : [];
+    const selectedArray = Array.from(selectedCards);
+    const selectedCardObjects = selectedArray.map(function(id) {
+        return hand.find(function(c) { return c.id === id; });
+    });
 
-    // Si un J est sélectionné et qu'on n'a pas encore imposé de couleur
-    const hasJack = selectedCardObjects.some(c => c?.rank === 'J');
+    const hasJack = selectedCardObjects.some(function(c) { return c && c.rank === 'J'; });
     if (hasJack && !imposedSuit) {
         openModal('suitModal');
         return;
@@ -530,7 +493,7 @@ function playSelectedCards(imposedSuit = null) {
     socket.emit('playCards', {
         gameId: currentGame.id,
         cardIds: selectedArray,
-        imposedSuit: imposedSuit
+        imposedSuit: imposedSuit || null
     });
 
     selectedCards.clear();
@@ -539,9 +502,9 @@ function playSelectedCards(imposedSuit = null) {
 // ===== PIOCHER =====
 function drawCard() {
     if (!currentGame) return;
-    const me = currentGame.players.find(p => p.id === myPlayerId);
-    if (currentGame.currentPlayerId !== myPlayerId || me?.rank) {
-        showNotification('Ce n\'est pas votre tour', 'error');
+    const me = currentGame.players.find(function(p) { return p.id === myPlayerId; });
+    if (currentGame.currentPlayerId !== myPlayerId || (me && me.rank)) {
+        showNotification("Ce n'est pas votre tour", 'error');
         return;
     }
     socket.emit('drawCard', { gameId: currentGame.id });
@@ -552,9 +515,9 @@ function renderLog() {
     const content = document.getElementById('logContent');
     if (!currentGame.log) return;
 
-    content.innerHTML = currentGame.log.slice().reverse().map(entry => `
-    <div class="log-entry">${escapeHtml(entry.message)}</div>
-  `).join('');
+    content.innerHTML = currentGame.log.slice().reverse().map(function(entry) {
+        return '<div class="log-entry">' + escapeHtml(entry.message) + '</div>';
+    }).join('');
 }
 
 function toggleLog() {
@@ -571,15 +534,13 @@ function showGameOver() {
 
     if (!currentGame.finishedPlayers || currentGame.finishedPlayers.length === 0) return;
 
-    ranking.innerHTML = currentGame.finishedPlayers.map(p => {
+    ranking.innerHTML = currentGame.finishedPlayers.map(function(p) {
         const medal = p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : p.rank === 3 ? '🥉' : '🏅';
-        return `
-      <div class="ranking-item ${p.rank === 1 ? 'winner' : ''}">
-        <span class="ranking-position">${medal}</span>
-        <span class="ranking-name">${escapeHtml(p.name)}</span>
-        <span style="color:var(--text-secondary);font-size:13px;">#${p.rank}</span>
-      </div>
-    `;
+        return '<div class="ranking-item ' + (p.rank === 1 ? 'winner' : '') + '">' +
+            '<span class="ranking-position">' + medal + '</span>' +
+            '<span class="ranking-name">' + escapeHtml(p.name) + '</span>' +
+            '<span style="color:var(--text-secondary);font-size:13px;">#' + p.rank + '</span>' +
+            '</div>';
     }).join('');
 
     modal.classList.add('active');
@@ -595,6 +556,8 @@ function returnToLobby() {
     selectedCards.clear();
     showScreen('lobbyScreen');
 }
+
+window.returnToLobby = returnToLobby;
 
 // ===== QUITTER =====
 function leaveGame() {
@@ -624,13 +587,14 @@ window.closeModal = closeModal;
 // ===== NOTIFICATION =====
 let notifTimeout = null;
 
-function showNotification(message, type = 'info') {
+function showNotification(message, type) {
+    type = type || 'info';
     const notif = document.getElementById('notification');
     notif.textContent = message;
-    notif.className = `notification ${type}`;
+    notif.className = 'notification ' + type;
 
     clearTimeout(notifTimeout);
-    notifTimeout = setTimeout(() => {
+    notifTimeout = setTimeout(function() {
         notif.classList.add('hidden');
     }, 3500);
 }
@@ -642,6 +606,4 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Exposer globalement
 window.toggleCardSelection = toggleCardSelection;
-window.returnToLobby = returnToLobby;

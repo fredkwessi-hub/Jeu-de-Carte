@@ -1,5 +1,7 @@
 node_modules/
 *.log
 .DS_Store
-history.json
 .env
+.env.local
+.idea/
+.vscode/

@@ -15,15 +15,15 @@ const SUIT_COLORS = {
 const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 const JOKERS = ['joker_rouge', 'joker_noir'];
 
-// ===== CRÉATION DU DECK =====
+// ===== DECK =====
 function createDeck() {
     const deck = [];
     let id = 0;
 
-    SUITS.forEach(suit => {
-        RANKS.forEach(rank => {
+    SUITS.forEach(function(suit) {
+        RANKS.forEach(function(rank) {
             deck.push({
-                id: `card_${id++}`,
+                id: 'card_' + (id++),
                 suit: suit,
                 rank: rank,
                 type: 'normal',
@@ -33,9 +33,8 @@ function createDeck() {
         });
     });
 
-    // Ajouter les 2 jokers
     deck.push({
-        id: `card_${id++}`,
+        id: 'card_' + (id++),
         suit: 'joker',
         rank: 'JOKER',
         type: 'joker',
@@ -45,7 +44,7 @@ function createDeck() {
     });
 
     deck.push({
-        id: `card_${id++}`,
+        id: 'card_' + (id++),
         suit: 'joker',
         rank: 'JOKER',
         type: 'joker',
@@ -57,18 +56,21 @@ function createDeck() {
     return deck;
 }
 
-// ===== MÉLANGE (Fisher-Yates) =====
+// ===== MÉLANGE =====
 function shuffle(array) {
-    const arr = [...array];
+    const arr = array.slice();
     for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+        const temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
     }
     return arr;
 }
 
 // ===== DISTRIBUTION =====
-function distributeCards(deck, playerCount, cardsPerPlayer = 5) {
+function distributeCards(deck, playerCount, cardsPerPlayer) {
+    cardsPerPlayer = cardsPerPlayer || 5;
     const shuffled = shuffle(deck);
     const hands = [];
 
@@ -78,10 +80,10 @@ function distributeCards(deck, playerCount, cardsPerPlayer = 5) {
 
     const remaining = shuffled.slice(playerCount * cardsPerPlayer);
 
-    return { hands, bank: remaining };
+    return { hands: hands, bank: remaining };
 }
 
-// ===== CARTE CENTRALE VALIDE =====
+// ===== CARTE CENTRALE =====
 function isValidCenterCard(card) {
     if (!card) return false;
     if (card.type === 'joker') return false;
@@ -90,7 +92,7 @@ function isValidCenterCard(card) {
 }
 
 function drawCenterCard(bank) {
-    const bankCopy = [...bank];
+    const bankCopy = bank.slice();
     let attempts = 0;
     const maxAttempts = 100;
 
@@ -105,7 +107,6 @@ function drawCenterCard(bank) {
         attempts++;
     }
 
-    // Fallback : chercher la première carte valide
     const validIndex = bankCopy.findIndex(isValidCenterCard);
     if (validIndex !== -1) {
         const card = bankCopy[validIndex];
@@ -116,17 +117,15 @@ function drawCenterCard(bank) {
     return { centerCard: null, newBank: bankCopy };
 }
 
-// ===== VALIDATION D'UN COUP =====
-function canPlayCard(card, centerCard, imposedSuit = null) {
+// ===== VALIDATION =====
+function canPlayCard(card, centerCard, imposedSuit) {
     if (!card) return false;
 
-    // Si un J a imposé une couleur
     if (imposedSuit) {
-        if (card.type === 'joker') return true; // Joker passe toujours
+        if (card.type === 'joker') return true;
         return card.suit === imposedSuit;
     }
 
-    // Carte normale : même rang OU même couleur
     if (card.type === 'joker') return true;
     if (!centerCard) return true;
 
@@ -136,42 +135,36 @@ function canPlayCard(card, centerCard, imposedSuit = null) {
     return false;
 }
 
-// ===== VÉRIFIER SI LE JOUEUR A UN COUP VALIDE =====
-function hasValidMove(hand, centerCard, imposedSuit = null) {
-    return hand.some(card => canPlayCard(card, centerCard, imposedSuit));
+function hasValidMove(hand, centerCard, imposedSuit) {
+    return hand.some(function(card) { return canPlayCard(card, centerCard, imposedSuit); });
 }
 
-// ===== EFFET DES CARTES SPÉCIALES =====
+// ===== EFFETS =====
 function getCardEffect(card) {
     if (!card) return { type: 'none' };
 
     if (card.type === 'joker') {
         return { type: 'joker', drawCount: 4, blockable: true };
     }
-
     if (card.rank === '7') {
         return { type: 'seven', drawCount: 2, blockable: true };
     }
-
     if (card.rank === 'A') {
         return { type: 'ace', skip: true };
     }
-
     if (card.rank === 'J') {
         return { type: 'jack', impose: true };
     }
-
     return { type: 'normal' };
 }
 
-// ===== RECHERCHE DE PLUSIEURS CARTES DU MÊME RANG =====
+// ===== CARTES DU MÊME RANG =====
 function getPlayableCardsOfSameRank(hand, rank) {
-    return hand.filter(card => card.rank === rank);
+    return hand.filter(function(card) { return card.rank === rank; });
 }
 
-// ===== RECONSTITUTION DE LA BANQUE =====
+// ===== RECONSTITUTION BANQUE =====
 function reshuffleBank(pile) {
-    // On garde la carte la plus haute (celle du dessus)
     if (pile.length <= 1) return { newBank: [], newPile: pile };
 
     const topCard = pile[pile.length - 1];
@@ -184,36 +177,31 @@ function reshuffleBank(pile) {
     };
 }
 
-// ===== FONCTIONS POUR L'IA =====
-
-// Vérifier si un joueur peut bloquer une attaque
+// ===== FONCTIONS IA =====
 function canBlockAttack(hand) {
-    return hand.some(card => {
+    return hand.some(function(card) {
         if (card.type === 'joker') return true;
         if (card.rank === '7') return true;
         return false;
     });
 }
 
-// Obtenir toutes les cartes jouables
-function getPlayableCards(hand, centerCard, imposedSuit = null) {
-    return hand.filter(card => canPlayCard(card, centerCard, imposedSuit));
+function getPlayableCards(hand, centerCard, imposedSuit) {
+    return hand.filter(function(card) { return canPlayCard(card, centerCard, imposedSuit); });
 }
 
-// Grouper les cartes par rang
 function groupByRank(hand) {
     const groups = {};
-    hand.forEach(card => {
+    hand.forEach(function(card) {
         if (!groups[card.rank]) groups[card.rank] = [];
         groups[card.rank].push(card);
     });
     return groups;
 }
 
-// Grouper les cartes par couleur
 function groupBySuit(hand) {
     const groups = {};
-    hand.forEach(card => {
+    hand.forEach(function(card) {
         if (card.suit && card.type !== 'joker') {
             if (!groups[card.suit]) groups[card.suit] = [];
             groups[card.suit].push(card);
@@ -224,23 +212,23 @@ function groupBySuit(hand) {
 
 // ===== EXPORTS =====
 module.exports = {
-    SUITS,
-    SUIT_SYMBOLS,
-    SUIT_COLORS,
-    RANKS,
-    JOKERS,
-    createDeck,
-    shuffle,
-    distributeCards,
-    isValidCenterCard,
-    drawCenterCard,
-    canPlayCard,
-    hasValidMove,
-    getCardEffect,
-    getPlayableCardsOfSameRank,
-    reshuffleBank,
-    canBlockAttack,
-    getPlayableCards,
-    groupByRank,
-    groupBySuit
+    SUITS: SUITS,
+    SUIT_SYMBOLS: SUIT_SYMBOLS,
+    SUIT_COLORS: SUIT_COLORS,
+    RANKS: RANKS,
+    JOKERS: JOKERS,
+    createDeck: createDeck,
+    shuffle: shuffle,
+    distributeCards: distributeCards,
+    isValidCenterCard: isValidCenterCard,
+    drawCenterCard: drawCenterCard,
+    canPlayCard: canPlayCard,
+    hasValidMove: hasValidMove,
+    getCardEffect: getCardEffect,
+    getPlayableCardsOfSameRank: getPlayableCardsOfSameRank,
+    reshuffleBank: reshuffleBank,
+    canBlockAttack: canBlockAttack,
+    getPlayableCards: getPlayableCards,
+    groupByRank: groupByRank,
+    groupBySuit: groupBySuit
 };

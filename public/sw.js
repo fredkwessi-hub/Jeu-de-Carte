@@ -1,49 +1,43 @@
-// public/sw.js - Service Worker
-
 const CACHE_NAME = 'jeu-cartes-v1';
 const ASSETS = [
     '/',
     '/index.html',
     '/style.css',
     '/script.js',
-    '/manifest.json',
-    '/icon-192.png',
-    '/icon-512.png'
+    '/manifest.json'
 ];
 
-// Installation
-self.addEventListener('install', (event) => {
+self.addEventListener('install', function(event) {
     console.log('✅ Service Worker installé');
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(cache => cache.addAll(ASSETS))
-            .then(() => self.skipWaiting())
-            .catch(err => console.error('❌ Erreur cache:', err))
+            .then(function(cache) { return cache.addAll(ASSETS); })
+            .then(function() { return self.skipWaiting(); })
+            .catch(function(err) { console.error('❌ Erreur cache:', err); })
     );
 });
 
-// Activation
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', function(event) {
     console.log('✅ Service Worker activé');
     event.waitUntil(
-        caches.keys()
-            .then(keys => Promise.all(
-                keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-            ))
-            .then(() => clients.claim())
+        caches.keys().then(function(keys) {
+            return Promise.all(
+                keys.filter(function(key) { return key !== CACHE_NAME; })
+                    .map(function(key) { return caches.delete(key); })
+            );
+        }).then(function() { return clients.claim(); })
     );
 });
 
-// Fetch (offline)
-self.addEventListener('fetch', (event) => {
-    // Ne pas intercepter les requêtes Socket.io
-    if (event.request.url.includes('/socket.io/')) {
-        return;
-    }
+self.addEventListener('fetch', function(event) {
+    if (event.request.url.indexOf('/socket.io/') !== -1) return;
 
     event.respondWith(
         caches.match(event.request)
-            .then(response => response || fetch(event.request))
-            .catch(() => caches.match('/index.html'))
+            .then(function(response) {
+                return response || fetch(event.request).catch(function() {
+                    return caches.match('/index.html');
+                });
+            })
     );
 });
