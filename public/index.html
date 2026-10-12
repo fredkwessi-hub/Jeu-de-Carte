@@ -2,11 +2,13 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>🃏 Jeu de Cartes — Édition Premium</title>
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#6C63FF" />
-    <link rel="stylesheet" href="style.css" />
+    <meta name="theme-color" content="#0F0E1E" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="stylesheet" href="/style.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
 </head>
 <body>
@@ -196,13 +198,17 @@
 <div id="gameScreen" class="screen">
     <!-- Header -->
     <header class="game-header">
-        <div class="game-info">
-            <span class="game-code-pill" id="gameCodeDisplay">---</span>
-            <span class="game-status-pill" id="gameStatus">En cours</span>
+        <div class="game-header-left">
+            <button id="leaveGameBtn" class="btn-icon btn-icon-danger" title="Quitter" aria-label="Quitter la partie">
+                <span class="btn-icon-emoji">✕</span>
+            </button>
+            <div class="game-info">
+                <span class="game-code-pill" id="gameCodeDisplay">---</span>
+                <span class="game-status-pill" id="gameStatus">En cours</span>
+            </div>
         </div>
         <div class="game-header-actions">
-            <button id="rulesBtn" class="btn-icon" title="Règles">📖</button>
-            <button id="leaveGameBtn" class="btn-icon" title="Quitter">🚪</button>
+            <button id="rulesBtn" class="btn-icon" title="Règles" aria-label="Règles">📖</button>
         </div>
     </header>
 
@@ -263,7 +269,11 @@
     </div>
 </div>
 
-<!-- ===== MODALS ===== -->
+<!-- ============================================================= -->
+<!-- MODALS                                                        -->
+<!-- ============================================================= -->
+
+<!-- Modal choix couleur (J) -->
 <div id="suitModal" class="modal">
     <div class="modal-content modal-suit">
         <h3>🎭 Choisissez une couleur</h3>
@@ -289,6 +299,7 @@
     </div>
 </div>
 
+<!-- Modal règles -->
 <div id="rulesModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -317,6 +328,7 @@
     </div>
 </div>
 
+<!-- Modal fin de partie -->
 <div id="gameOverModal" class="modal">
     <div class="modal-content modal-victory">
         <div class="victory-icon">🏆</div>
@@ -332,13 +344,13 @@
 <div id="notification" class="notification hidden"></div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="script.js"></script>
+<script src="/script.js"></script>
 
 <!-- Script pour l'accordéon des règles -->
 <script>
-    document.getElementById('rulesToggle').addEventListener('click', () => {
-        const body = document.getElementById('rulesBody');
-        const arrow = document.querySelector('.rules-toggle-arrow');
+    document.getElementById('rulesToggle').addEventListener('click', function() {
+        var body = document.getElementById('rulesBody');
+        var arrow = document.querySelector('.rules-toggle-arrow');
         body.classList.toggle('open');
         arrow.style.transform = body.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
     });

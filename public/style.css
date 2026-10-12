@@ -37,11 +37,16 @@
     --card-radius: 12px;
 }
 
+html, body {
+    height: 100%;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background: var(--bg);
     color: var(--text-primary);
     min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
     position: relative;
 }
@@ -74,20 +79,10 @@ body {
 }
 
 @keyframes floatDown {
-    0% {
-        transform: translateY(-100px) rotate(0deg);
-        opacity: 0;
-    }
-    10% {
-        opacity: 1;
-    }
-    90% {
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(110vh) rotate(360deg);
-        opacity: 0;
-    }
+    0%   { transform: translateY(-100px) rotate(0deg); opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
 }
 
 /* Halos lumineux */
@@ -118,7 +113,7 @@ body {
 
 @keyframes pulseGlow {
     0%, 100% { transform: scale(1); opacity: 0.5; }
-    50% { transform: scale(1.2); opacity: 0.7; }
+    50%      { transform: scale(1.2); opacity: 0.7; }
 }
 
 /* ============================================================= */
@@ -127,6 +122,7 @@ body {
 .screen {
     display: none;
     min-height: 100vh;
+    min-height: 100dvh;
     position: relative;
     z-index: 1;
 }
@@ -137,7 +133,7 @@ body {
 
 @keyframes screenFadeIn {
     from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ============================================================= */
@@ -205,15 +201,15 @@ body {
 
 @keyframes logoFlip1 {
     0%, 100% { transform: translateX(-50%) rotate(-15deg); }
-    50% { transform: translateX(-50%) rotate(-25deg) translateY(-4px); }
+    50%      { transform: translateX(-50%) rotate(-25deg) translateY(-4px); }
 }
 @keyframes logoFlip2 {
     0%, 100% { transform: translateX(-50%) rotate(0deg) translateY(0); }
-    50% { transform: translateX(-50%) rotate(0deg) translateY(-10px); }
+    50%      { transform: translateX(-50%) rotate(0deg) translateY(-10px); }
 }
 @keyframes logoFlip3 {
     0%, 100% { transform: translateX(-50%) rotate(15deg); }
-    50% { transform: translateX(-50%) rotate(25deg) translateY(-4px); }
+    50%      { transform: translateX(-50%) rotate(25deg) translateY(-4px); }
 }
 
 /* Titre */
@@ -230,12 +226,13 @@ body {
     background-size: 200% 200%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
     animation: gradientShift 5s ease infinite;
 }
 
 @keyframes gradientShift {
     0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
+    50%      { background-position: 100% 50%; }
 }
 
 .subtitle {
@@ -418,7 +415,7 @@ body {
 
 @keyframes quickPulse {
     0%, 100% { box-shadow: 0 8px 24px rgba(255, 101, 132, 0.4); }
-    50% { box-shadow: 0 8px 24px rgba(255, 101, 132, 0.4), 0 0 0 8px rgba(255, 101, 132, 0); }
+    50%      { box-shadow: 0 8px 24px rgba(255, 101, 132, 0.4), 0 0 0 8px rgba(255, 101, 132, 0); }
 }
 
 /* Bouton ghost */
@@ -441,6 +438,7 @@ body {
     width: auto;
 }
 
+/* Bouton icône rond */
 .btn-icon {
     width: 44px;
     height: 44px;
@@ -538,7 +536,7 @@ body {
 }
 
 .rules-body.open {
-    max-height: 600px;
+    max-height: 700px;
 }
 
 .rule-item {
@@ -712,6 +710,13 @@ body {
     width: auto;
     min-width: 160px;
     padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(15, 14, 30, 0.6);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
 }
 
 .waiting-message {
@@ -721,13 +726,14 @@ body {
 }
 
 /* ============================================================= */
-/* GAME SCREEN                                                   */
+/* GAME HEADER — Version mobile-friendly                        */
 /* ============================================================= */
 .game-header {
-    background: rgba(30, 29, 53, 0.85);
+    background: rgba(30, 29, 53, 0.92);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    padding: 14px 24px;
+    padding: 12px 16px;
+    padding-top: max(12px, env(safe-area-inset-top));
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -735,38 +741,83 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
+    gap: 10px;
+    min-height: 64px;
+}
+
+.game-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .game-info {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     align-items: center;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    min-width: 0;
+    flex: 1;
 }
 
 .game-code-pill {
     font-family: 'Space Grotesk', monospace;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--primary-light);
     background: rgba(108, 99, 255, 0.15);
-    padding: 6px 14px;
+    padding: 6px 12px;
     border-radius: 20px;
     border: 1px solid rgba(108, 99, 255, 0.3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
 }
 
 .game-status-pill {
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
     color: var(--success);
     background: rgba(46, 204, 113, 0.15);
-    padding: 6px 14px;
+    padding: 6px 12px;
     border-radius: 20px;
     border: 1px solid rgba(46, 204, 113, 0.3);
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .game-header-actions {
     display: flex;
-    gap: 10px;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* Bouton de sortie spécial (rouge, toujours visible) */
+.btn-icon-danger {
+    background: linear-gradient(135deg, #FF6584 0%, #E74C3C 100%);
+    color: white;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    box-shadow: 0 4px 16px rgba(255, 101, 132, 0.5);
+    flex-shrink: 0;
+}
+
+.btn-icon-danger:hover {
+    background: linear-gradient(135deg, #E74C3C 0%, #C0392B 100%);
+    transform: scale(1.1) rotate(-5deg);
+    box-shadow: 0 6px 24px rgba(255, 101, 132, 0.7);
+}
+
+.btn-icon-emoji {
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 1;
 }
 
 /* ============================================================= */
@@ -803,7 +854,7 @@ body {
 
 @keyframes opponentPulse {
     0%, 100% { box-shadow: 0 0 30px rgba(108, 99, 255, 0.5), inset 0 0 20px rgba(108, 99, 255, 0.1); }
-    50% { box-shadow: 0 0 40px rgba(108, 99, 255, 0.8), inset 0 0 30px rgba(108, 99, 255, 0.2); }
+    50%      { box-shadow: 0 0 40px rgba(108, 99, 255, 0.8), inset 0 0 30px rgba(108, 99, 255, 0.2); }
 }
 
 .opponent.disconnected {
@@ -917,7 +968,6 @@ body {
     font-weight: 500;
 }
 
-/* Card slot avec glow */
 .card-slot {
     position: relative;
     display: inline-block;
@@ -935,7 +985,7 @@ body {
 
 @keyframes cardGlow {
     0%, 100% { opacity: 0.5; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(1.1); }
+    50%      { opacity: 0.8; transform: scale(1.1); }
 }
 
 /* ============================================================= */
@@ -990,7 +1040,6 @@ body {
     letter-spacing: -0.5px;
 }
 
-/* Carte centrale avec animation */
 .card.center-card {
     width: 110px;
     height: 156px;
@@ -1001,7 +1050,7 @@ body {
 
 @keyframes centerCardPulse {
     0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-6px) rotate(1deg); }
+    50%      { transform: translateY(-6px) rotate(1deg); }
 }
 
 .card.center-card .card-symbol {
@@ -1012,7 +1061,6 @@ body {
     font-size: 28px;
 }
 
-/* Carte banque */
 .card.bank-card {
     background: linear-gradient(135deg, #6C63FF 0%, #5A52D5 50%, #4A42B5 100%);
     color: white;
@@ -1040,7 +1088,6 @@ body {
     box-shadow: 0 20px 40px rgba(108, 99, 255, 0.5);
 }
 
-/* Carte Joker */
 .card.joker {
     background: linear-gradient(135deg, #FF6584 0%, #FF8FA3 50%, #FFB0C0 100%);
     color: white;
@@ -1058,7 +1105,7 @@ body {
 
 @keyframes sparkle {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(1.2); }
+    50%      { opacity: 0.6; transform: scale(1.2); }
 }
 
 /* ============================================================= */
@@ -1092,7 +1139,7 @@ body {
 
 @keyframes myTurnPulse {
     0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(108, 99, 255, 0.6); }
-    50% { transform: scale(1.03); box-shadow: 0 0 40px rgba(108, 99, 255, 0.9); }
+    50%      { transform: scale(1.03); box-shadow: 0 0 40px rgba(108, 99, 255, 0.9); }
 }
 
 .imposed-suit {
@@ -1109,7 +1156,7 @@ body {
 
 @keyframes imposedSuitIn {
     from { transform: scale(0.5); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    to   { transform: scale(1); opacity: 1; }
 }
 
 .pending-draw {
@@ -1126,7 +1173,7 @@ body {
 
 @keyframes pendingDraw {
     0%, 100% { transform: scale(1) rotate(-1deg); }
-    50% { transform: scale(1.05) rotate(1deg); }
+    50%      { transform: scale(1.05) rotate(1deg); }
 }
 
 /* ============================================================= */
@@ -1137,6 +1184,7 @@ body {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     padding: 20px 24px;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     margin-top: 20px;
     box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.4);
@@ -1200,7 +1248,6 @@ body {
     border-radius: 3px;
 }
 
-/* Cartes de la main */
 .hand-card {
     flex-shrink: 0;
     cursor: pointer;
@@ -1237,7 +1284,6 @@ body {
     border-color: var(--primary);
 }
 
-/* Indicateur carte jouable */
 .hand-card.playable::before {
     content: '';
     position: absolute;
@@ -1250,7 +1296,7 @@ body {
 
 @keyframes playablePulse {
     0%, 100% { opacity: 0.6; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.02); }
+    50%      { opacity: 1; transform: scale(1.02); }
 }
 
 .hand-card.not-playable {
@@ -1363,7 +1409,7 @@ body {
 
 @keyframes modalSlide {
     from { transform: scale(0.9) translateY(20px); opacity: 0; }
-    to { transform: scale(1) translateY(0); opacity: 1; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
 }
 
 .modal-header {
@@ -1497,7 +1543,7 @@ body {
 
 @keyframes victoryBounce {
     0%, 100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-10px) scale(1.05); }
+    50%      { transform: translateY(-10px) scale(1.05); }
 }
 
 .modal-victory h2 {
@@ -1507,6 +1553,7 @@ body {
     background: linear-gradient(135deg, #F39C12, #FFD700);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .final-ranking {
@@ -1586,7 +1633,7 @@ body {
 }
 
 /* ============================================================= */
-/* RESPONSIVE                                                    */
+/* RESPONSIVE — Tablette                                         */
 /* ============================================================= */
 @media (max-width: 768px) {
     .lobby-title { font-size: 40px; }
@@ -1604,9 +1651,71 @@ body {
     .my-hand-zone { padding: 16px; }
     .log-panel { margin: 0 12px 12px; }
     .modal-content { padding: 24px 20px; }
+
+    .game-header {
+        padding: 10px 12px;
+        min-height: 60px;
+    }
+    .game-code-pill {
+        font-size: 11px;
+        padding: 5px 10px;
+        max-width: 100px;
+    }
+    .game-status-pill {
+        font-size: 10px;
+        padding: 5px 10px;
+    }
+    .btn-icon-danger {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+    }
 }
 
+/* ============================================================= */
+/* RESPONSIVE — Petits téléphones                                */
+/* ============================================================= */
 @media (max-width: 480px) {
+    .game-header {
+        padding: 8px 10px;
+        padding-top: max(8px, env(safe-area-inset-top));
+        min-height: 56px;
+        gap: 8px;
+    }
+
+    .game-header-left {
+        gap: 8px;
+    }
+
+    .game-info {
+        gap: 6px;
+    }
+
+    .game-code-pill {
+        font-size: 10px;
+        padding: 4px 8px;
+        max-width: 80px;
+        letter-spacing: 0;
+    }
+
+    .game-status-pill {
+        display: none;
+    }
+
+    .btn-icon-danger {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        font-size: 18px;
+    }
+
+    .game-header-actions .btn-icon {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        font-size: 16px;
+    }
+
     .lobby-container { padding: 40px 16px 24px; }
     .lobby-title { font-size: 32px; }
     .subtitle { font-size: 14px; margin-bottom: 28px; }
@@ -1623,6 +1732,103 @@ body {
     .hand-card .card .card-rank { font-size: 14px; }
     .suit-symbol { font-size: 32px; }
     .victory-icon { font-size: 60px; }
+
+    .center-zone {
+        gap: 16px;
+        padding: 20px 8px;
+    }
+
+    .opponents-zone {
+        padding: 12px 8px;
+        gap: 10px;
+    }
+    .opponent {
+        min-width: 110px;
+        padding: 10px;
+    }
+    .opponent-name { font-size: 13px; }
+    .opponent-cards { font-size: 11px; }
+
+    .my-hand-zone {
+        padding: 14px 10px;
+        margin-top: 12px;
+    }
+    .hand-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .hand-actions {
+        justify-content: stretch;
+    }
+    .hand-actions .btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .log-panel {
+        margin: 0 8px 8px;
+    }
+    .log-content {
+        padding: 12px 14px;
+        font-size: 12px;
+    }
+    .log-header {
+        padding: 12px 14px;
+        font-size: 13px;
+    }
+
+    .modal {
+        padding: 12px;
+        align-items: flex-end;
+    }
+    .modal-content {
+        padding: 24px 20px;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        max-height: 85vh;
+        animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalSlideUp {
+        from { transform: translateY(100%); }
+        to   { transform: translateY(0); }
+    }
+
+    .suit-options {
+        gap: 10px;
+    }
+    .suit-btn {
+        padding: 18px 12px;
+    }
+    .suit-symbol { font-size: 32px; }
+    .suit-label { font-size: 12px; }
+
+    .notification {
+        bottom: 12px;
+        right: 12px;
+        left: 12px;
+        max-width: none;
+        font-size: 13px;
+        padding: 14px 16px;
+    }
+}
+
+/* ============================================================= */
+/* SUPPORT NOTCH / ENCOCHE (iPhone X+)                           */
+/* ============================================================= */
+@supports (padding: max(0px)) {
+    .game-header {
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+    }
+
+    .my-hand-zone {
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+
+    .notification {
+        bottom: max(12px, env(safe-area-inset-bottom));
+    }
 }
 
 /* ============================================================= */
