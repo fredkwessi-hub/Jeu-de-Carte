@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>🃏 Jeu de Cartes Multijoueur</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#6C63FF" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ===== ÉCRAN D'ACCUEIL ===== -->
+<div id="lobbyScreen" class="screen active">
+    <div class="lobby-container">
+        <h1>🃏 Jeu de Cartes</h1>
+        <p class="subtitle">Affrontez vos amis ou l'IA</p>
+
+        <div class="lobby-card">
+            <div class="form-group">
+                <label>Votre nom</label>
+                <input type="text" id="playerName" placeholder="Entrez votre nom..." maxlength="20" />
+            </div>
+
+            <button id="quickPlayBtn" class="btn btn-quick">
+                ⚡ Partie rapide contre l'IA
+            </button>
+
+            <div class="divider">OU</div>
+
+            <button id="createGameBtn" class="btn btn-primary">
+                🎮 Créer une partie multijoueur
+            </button>
+
+            <div class="divider">OU</div>
+
+            <div class="form-group">
+                <label>Code de la partie</label>
+                <input type="text" id="gameCodeInput" placeholder="Ex: game_abc123" />
+            </div>
+            <button id="joinGameBtn" class="btn btn-secondary">
+                🚪 Rejoindre une partie
+            </button>
+        </div>
+
+        <div class="rules-preview">
+            <h3>📖 Règles rapides</h3>
+            <ul>
+                <li>🎯 Superposez les cartes de même <strong>numéro</strong> ou même <strong>couleur</strong></li>
+                <li>🃏 <strong>Joker</strong> → +4 cartes au suivant</li>
+                <li>7️⃣ <strong>7</strong> → +2 cartes au suivant</li>
+                <li>🅰️ <strong>As</strong> → passe le tour du suivant</li>
+                <li>🎭 <strong>J</strong> → impose une couleur</li>
+                <li>🛡️ Bloquez une attaque avec un <strong>7</strong> ou un <strong>Joker</strong></li>
+                <li>📥 Piocher = passer son tour</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ÉCRAN D'ATTENTE ===== -->
+<div id="waitingScreen" class="screen">
+    <div class="waiting-container">
+        <h2>⏳ Salle d'attente</h2>
+        <div class="game-code">
+            <span>Code de la partie :</span>
+            <code id="displayGameCode">---</code>
+            <button id="copyCodeBtn" class="btn-icon" title="Copier">📋</button>
+        </div>
+
+        <div class="players-list">
+            <h3>Joueurs (<span id="playerCount">1</span>/<span id="maxPlayers">4</span>)</h3>
+            <div id="waitingPlayersList"></div>
+        </div>
+
+        <div class="bot-controls" id="botControls" style="display:none;">
+            <select id="botDifficulty" class="form-control" style="max-width: 160px;">
+                <option value="easy">😊 Facile</option>
+                <option value="medium" selected>😐 Moyen</option>
+                <option value="hard">😈 Difficile</option>
+            </select>
+            <button id="addBotBtn" class="btn btn-secondary">
+                🤖 Ajouter un bot
+            </button>
+        </div>
+
+        <button id="startGameBtn" class="btn btn-primary" style="display:none;">
+            🚀 Démarrer la partie
+        </button>
+        <p id="waitingMessage" class="waiting-message">En attente d'autres joueurs...</p>
+
+        <button id="backToLobbyBtn" class="btn btn-secondary" style="margin-top: 16px;">
+            ← Retour au menu
+        </button>
+    </div>
+</div>
+
+<!-- ===== ÉCRAN DE JEU ===== -->
+<div id="gameScreen" class="screen">
+    <!-- Header -->
+    <header class="game-header">
+        <div class="game-info">
+            <span id="gameCodeDisplay">---</span>
+            <span id="gameStatus">En cours</span>
+        </div>
+        <div class="game-header-actions">
+            <button id="rulesBtn" class="btn-icon" title="Règles">📖</button>
+            <button id="leaveGameBtn" class="btn-icon" title="Quitter">🚪</button>
+        </div>
+    </header>
+
+    <!-- Adversaires -->
+    <div id="opponentsZone" class="opponents-zone"></div>
+
+    <!-- Zone centrale -->
+    <div class="center-zone">
+        <div class="pile-area">
+            <div class="pile-label">Centre</div>
+            <div id="centerCardDisplay" class="card center-card"></div>
+            <div id="pileCount" class="pile-count">0 cartes</div>
+        </div>
+
+        <div class="bank-area">
+            <div class="pile-label">Banque</div>
+            <div id="bankDisplay" class="card bank-card" title="Piocher une carte">🂠</div>
+            <div id="bankCount" class="pile-count">0 cartes</div>
+        </div>
+
+        <div class="turn-info">
+            <div id="currentPlayerIndicator" class="current-player">
+                ⏳ En attente...
+            </div>
+            <div id="imposedSuitDisplay" class="imposed-suit" style="display:none;"></div>
+            <div id="pendingDrawDisplay" class="pending-draw" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- Ma main -->
+    <div class="my-hand-zone">
+        <div class="hand-header">
+            <span>🖐️ Ma main (<span id="myCardCount">0</span>)</span>
+            <div class="hand-actions">
+                <button id="playSelectedBtn" class="btn btn-primary btn-sm" disabled>
+                    ▶ Jouer
+                </button>
+                <button id="drawCardBtn" class="btn btn-secondary btn-sm">
+                    📥 Piocher
+                </button>
+            </div>
+        </div>
+        <div id="myHand" class="my-hand"></div>
+    </div>
+
+    <!-- Journal -->
+    <div class="log-panel">
+        <div class="log-header" id="logHeader">
+            <span>📜 Journal</span>
+            <button id="toggleLogBtn" class="btn-icon btn-sm">▼</button>
+        </div>
+        <div id="logContent" class="log-content"></div>
+    </div>
+</div>
+
+<!-- ===== MODAL : CHOIX COULEUR ===== -->
+<div id="suitModal" class="modal">
+    <div class="modal-content">
+        <h3>🎭 Choisissez une couleur</h3>
+        <p class="modal-subtitle">Le joueur suivant devra jouer cette couleur</p>
+        <div class="suit-options">
+            <button class="suit-btn" data-suit="pique">♠ Pique</button>
+            <button class="suit-btn" data-suit="carreau">♦ Carreau</button>
+            <button class="suit-btn" data-suit="coeur">♥ Coeur</button>
+            <button class="suit-btn" data-suit="trefle">♣ Trèfle</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL : RÈGLES ===== -->
+<div id="rulesModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📖 Règles du jeu</h3>
+            <button class="close-btn" onclick="closeModal('rulesModal')">&times;</button>
+        </div>
+        <div class="rules-content">
+            <h4>🎯 But du jeu</h4>
+            <p>Se débarrasser de toutes ses cartes le premier.</p>
+
+            <h4>🃏 Superposition</h4>
+            <p>On pose une carte si elle a le <strong>même numéro</strong> OU la <strong>même couleur</strong> que la carte centrale.</p>
+
+            <h4>⚡ Cartes spéciales</h4>
+            <ul>
+                <li><strong>Joker</strong> : +4 cartes au joueur suivant</li>
+                <li><strong>7</strong> : +2 cartes au joueur suivant</li>
+                <li><strong>As</strong> : suspend le joueur suivant (passe son tour)</li>
+                <li><strong>J</strong> : impose une couleur au joueur suivant</li>
+            </ul>
+
+            <h4>🛡️ Blocage d'attaque</h4>
+            <p>Si vous avez un <strong>7</strong> ou un <strong>Joker</strong>, vous pouvez bloquer l'attaque et la renvoyer au joueur suivant, qui cumulera les cartes.</p>
+
+            <h4>📥 Piocher</h4>
+            <p>Si vous ne pouvez pas jouer, piochez une carte (ou le nombre en attente). <strong>Piocher = passer son tour.</strong></p>
+
+            <h4>🏆 Fin de partie</h4>
+            <p>Le premier à ne plus avoir de cartes gagne. On continue jusqu'au classement complet.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL : FIN DE PARTIE ===== -->
+<div id="gameOverModal" class="modal">
+    <div class="modal-content">
+        <h2 style="text-align:center;margin-bottom:16px;">🏆 Partie terminée !</h2>
+        <div id="finalRanking" class="final-ranking"></div>
+        <button onclick="returnToLobby()" class="btn btn-primary" style="width:100%;margin-top:16px;">
+            🏠 Retour au menu
+        </button>
+    </div>
+</div>
+
+<!-- ===== NOTIFICATION ===== -->
+<div id="notification" class="notification hidden"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
