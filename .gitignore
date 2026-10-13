@@ -1,42 +1,7 @@
-# Dépendances
 node_modules/
-package-lock.json
-
-# Logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Environnement
+.DS_Store
 .env
 .env.local
-.env.*.local
-
-# Données persistantes
-data/profiles.json
-data/matches.json
-data/tournaments.json
-data/friends.json
-data/replays/*.json
-
-# IDE
 .idea/
 .vscode/
-*.swp
-*.swo
-.DS_Store
-Thumbs.db
-
-# Build
-dist/
-build/
-*.min.js
-*.min.css
-
-# Cache
-.cache/
-.parcel-cache/
-
-# Tests
-coverage/
