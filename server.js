@@ -15,10 +15,7 @@ const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
-    cors: {
-        origin: '*',
-        methods: ['GET', 'POST']
-    },
+    cors: { origin: '*', methods: ['GET', 'POST'] },
     transports: ['websocket', 'polling']
 });
 
@@ -27,21 +24,20 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Route santé pour Render
-app.get('/health', (req, res) => {
+app.get('/health', function(req, res) {
     res.status(200).json({ status: 'ok', uptime: process.uptime() });
 });
 
-// Route racine
-app.get('/', (req, res) => {
+app.get('/', function(req, res) {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ===== STOCKAGE =====
 const games = new Map();
+const tournaments = new Map();
 const playerRooms = new Map();
 
-// ===== CRÉATION =====
+// ===== CRÉATION PARTIE SIMPLE =====
 function createGame(hostId, hostName, maxPlayers) {
     const gameId = 'game_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
 
@@ -66,6 +62,7 @@ function createGame(hostId, hostName, maxPlayers) {
         currentPlayerIndex: 0,
         direction: 1,
         imposedSuit: null,
+        imposedColor: null,
         pendingDraw: 0,
         pendingDrawFrom: null,
         skipNext: false,
@@ -73,11 +70,42 @@ function createGame(hostId, hostName, maxPlayers) {
         createdAt: new Date().toISOString(),
         finishedPlayers: [],
         log: [],
-        botTimeout: null
+        botTimeout: null,
+        mode: 'simple'
     };
 
     games.set(gameId, game);
     return game;
+}
+
+// ===== CRÉATION CHAMPIONNAT =====
+function createTournament(hostId, hostName, playerCount) {
+    const tournamentId = 'tournament_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+
+    const tournament = {
+        id: tournamentId,
+        hostId: hostId,
+        hostName: hostName,
+        playerCount: playerCount || 4,
+        participants: [{
+            id: hostId,
+            name: hostName,
+            isBot: false,
+            isConnected: true,
+            eliminated: false,
+            matchesWon: 0
+        }],
+        status: 'lobby',
+        currentRound: 0,
+        totalRounds: playerCount === 8 ? 3 : 2,
+        matches: [],
+        currentMatchIndex: 0,
+        createdAt: new Date().toISOString(),
+        log: []
+    };
+
+    tournaments.set(tournamentId, tournament);
+    return tournament;
 }
 
 // ===== OUTILS =====
@@ -92,12 +120,17 @@ function addLog(game, message) {
     if (game.log.length > 50) game.log.shift();
 }
 
+function addTournamentLog(tournament, message) {
+    tournament.log.push({ time: new Date().toISOString(), message: message });
+    if (tournament.log.length > 100) tournament.log.shift();
+}
+
 function nextPlayer(game) {
     game.currentPlayerIndex =
         (game.currentPlayerIndex + game.direction + game.players.length) % game.players.length;
 }
 
-// ===== DÉMARRAGE =====
+// ===== DÉMARRAGE PARTIE =====
 function startGame(gameId) {
     const game = games.get(gameId);
     if (!game) return { error: 'Partie introuvable' };
@@ -106,8 +139,9 @@ function startGame(gameId) {
     const deck = gameLogic.createDeck();
     const distribution = gameLogic.distributeCards(deck, game.players.length, 5);
 
-    game.players.forEach((player, i) => {
+    game.players.forEach(function(player, i) {
         player.hand = distribution.hands[i];
+        player.rank = null;
     });
 
     const centerResult = gameLogic.drawCenterCard(distribution.bank);
@@ -119,6 +153,9 @@ function startGame(gameId) {
     game.currentPlayerIndex = 0;
     game.turnCount = 0;
     game.log = [];
+    game.imposedSuit = null;
+    game.imposedColor = null;
+    game.finishedPlayers = [];
 
     addLog(game, '🎮 La partie commence ! Carte centrale : ' + formatCard(centerResult.centerCard));
 
@@ -127,7 +164,7 @@ function startGame(gameId) {
     return { success: true, game: game };
 }
 
-// ===== FIN DE PARTIE JOUEUR =====
+// ===== FIN DE PARTIE JOUEUR (modifiée : on arrête dès qu'on a le gagnant ET le dernier) =====
 function checkPlayerFinished(game, player) {
     if (player.hand.length === 0 && !game.finishedPlayers.find(function(p) { return p.id === player.id; })) {
         game.finishedPlayers.push({
@@ -139,20 +176,31 @@ function checkPlayerFinished(game, player) {
         player.rank = game.finishedPlayers.length;
         addLog(game, '🏆 ' + player.name + ' termine à la position ' + player.rank + ' !');
 
-        if (game.finishedPlayers.length >= game.players.length - 1) {
-            const remaining = game.players.find(function(p) { return !p.rank; });
-            if (remaining) {
-                game.finishedPlayers.push({
-                    id: remaining.id,
-                    name: remaining.name,
-                    rank: game.finishedPlayers.length + 1,
-                    finishedAt: new Date().toISOString()
-                });
-                remaining.rank = game.finishedPlayers.length;
-            }
+        // On arrête dès qu'on connaît le gagnant (1er) ET le dernier
+        const remainingPlayers = game.players.filter(function(p) { return !p.rank; });
+
+        if (remainingPlayers.length === 1) {
+            // Le dernier joueur restant est automatiquement dernier
+            const last = remainingPlayers[0];
+            game.finishedPlayers.push({
+                id: last.id,
+                name: last.name,
+                rank: game.finishedPlayers.length + 1,
+                finishedAt: new Date().toISOString()
+            });
+            last.rank = game.finishedPlayers.length;
+            addLog(game, '💀 ' + last.name + ' est le dernier !');
+
             game.status = 'finished';
-            addLog(game, '🎉 Partie terminée !');
+            addLog(game, '🎉 Partie terminée ! Classement complet établi.');
+
+            // Notifier la fin de partie
+            broadcastGameUpdate(game);
+            setTimeout(function() {
+                broadcastGameOver(game);
+            }, 500);
         }
+
         return true;
     }
     return false;
@@ -165,15 +213,19 @@ function applyCardEffect(game, card, playerId) {
     if (effect.type === 'joker') {
         game.pendingDraw += 4;
         game.pendingDrawFrom = playerId;
-        addLog(game, '🃏 Joker joué ! ' + game.pendingDraw + ' cartes en attente');
+        game.imposedColor = card.color;
+        game.imposedSuit = null;
+        addLog(game, '🃏 Joker ' + card.jokerColor + ' joué ! +4 cartes et couleur imposée : ' + (card.color === 'red' ? '🔴 Rouge' : '⚫ Noir'));
     } else if (effect.type === 'seven') {
         game.pendingDraw += 2;
         game.pendingDrawFrom = playerId;
-        addLog(game, '7️⃣ Sept joué ! ' + game.pendingDraw + ' cartes en attente');
+        addLog(game, '7️⃣ Sept joué ! +2 cartes en attente');
     } else if (effect.type === 'ace') {
         game.skipNext = true;
         addLog(game, '🅰️ As joué ! Le joueur suivant est suspendu');
     } else if (effect.type === 'jack') {
+        game.imposedSuit = null;
+        game.imposedColor = null;
         addLog(game, '🎭 J commande joué !');
     }
 
@@ -233,6 +285,7 @@ function playBotTurn(game) {
     const gameState = {
         centerCard: game.centerCard,
         imposedSuit: game.imposedSuit,
+        imposedColor: game.imposedColor,
         pendingDraw: game.pendingDraw,
         playerCount: game.players.length
     };
@@ -273,6 +326,13 @@ function playBotTurn(game) {
         });
 
         game.centerCard = cards[cards.length - 1];
+
+        const lastBlocker = cards[cards.length - 1];
+        if (lastBlocker.type === 'joker') {
+            game.imposedColor = lastBlocker.color;
+            game.imposedSuit = null;
+        }
+
         game.pendingDraw = totalDraw;
         game.pendingDrawFrom = bot.id;
 
@@ -288,12 +348,20 @@ function playBotTurn(game) {
     }
 
     const jackPlayed = cards.find(function(c) { return c.rank === 'J'; });
+    const jokerPlayed = cards.find(function(c) { return c.type === 'joker'; });
+
     if (jackPlayed) {
         const suit = aiLogic.chooseSuitForJack(bot.hand, difficulty);
         game.imposedSuit = suit;
+        game.imposedColor = null;
         addLog(game, '🎭 ' + bot.name + ' impose ' + suit);
+    } else if (jokerPlayed) {
+        game.imposedColor = jokerPlayed.color;
+        game.imposedSuit = null;
+        addLog(game, '🃏 ' + bot.name + ' joue un Joker ' + jokerPlayed.jokerColor);
     } else {
         game.imposedSuit = null;
+        game.imposedColor = null;
     }
 
     cards.forEach(function(card) {
@@ -308,6 +376,8 @@ function playBotTurn(game) {
     addLog(game, '▶️ ' + bot.name + ' joue ' + cards.map(formatCard).join(', '));
 
     checkPlayerFinished(game, bot);
+    if (game.status === 'finished') return;
+
     nextPlayer(game);
 
     if (game.skipNext) {
@@ -342,12 +412,14 @@ function serializeGame(game, playerId) {
         status: game.status,
         maxPlayers: game.maxPlayers,
         hostId: game.hostId,
+        mode: game.mode || 'simple',
         centerCard: game.centerCard,
         pileCount: game.pile.length,
         bankCount: game.bank.length,
         currentPlayerIndex: game.currentPlayerIndex,
         currentPlayerId: game.players[game.currentPlayerIndex] ? game.players[game.currentPlayerIndex].id : null,
         imposedSuit: game.imposedSuit,
+        imposedColor: game.imposedColor,
         pendingDraw: game.pendingDraw,
         skipNext: game.skipNext,
         turnCount: game.turnCount,
@@ -381,10 +453,22 @@ function broadcastGameUpdate(game) {
     });
 }
 
+function broadcastGameOver(game) {
+    game.players.forEach(function(player) {
+        if (!player.isBot) {
+            io.to(player.id).emit('gameOver', {
+                game: serializeGame(game, player.id),
+                finalRanking: game.finishedPlayers
+            });
+        }
+    });
+}
+
 // ===== SOCKET.IO =====
 io.on('connection', function(socket) {
     console.log('🔌 Client connecté:', socket.id);
 
+    // ===== CRÉER UNE PARTIE =====
     socket.on('createGame', function(data) {
         const game = createGame(socket.id, data.playerName, data.maxPlayers);
         socket.join(game.id);
@@ -399,9 +483,106 @@ io.on('connection', function(socket) {
         console.log('🎮 Partie créée: ' + game.id);
     });
 
+    // ===== CRÉER UN CHAMPIONNAT =====
+    socket.on('createTournament', function(data) {
+        const tournament = createTournament(socket.id, data.playerName, data.playerCount);
+        socket.join(tournament.id);
+        playerRooms.set(socket.id, { tournamentId: tournament.id, playerId: socket.id });
+
+        socket.emit('tournamentCreated', {
+            tournamentId: tournament.id,
+            playerId: socket.id,
+            tournament: serializeTournament(tournament)
+        });
+
+        console.log('🏆 Championnat créé: ' + tournament.id);
+    });
+
+    // ===== REJOINDRE UN CHAMPIONNAT =====
+    socket.on('joinTournament', function(data) {
+        const tournament = tournaments.get(data.tournamentId);
+        if (!tournament) return socket.emit('error', { message: 'Championnat introuvable' });
+        if (tournament.status !== 'lobby') return socket.emit('error', { message: 'Le championnat a déjà commencé' });
+        if (tournament.participants.length >= tournament.playerCount) return socket.emit('error', { message: 'Championnat complet' });
+
+        tournament.participants.push({
+            id: socket.id,
+            name: data.playerName,
+            isBot: false,
+            isConnected: true,
+            eliminated: false,
+            matchesWon: 0
+        });
+
+        socket.join(tournament.id);
+        playerRooms.set(socket.id, { tournamentId: tournament.id, playerId: socket.id });
+
+        io.to(tournament.id).emit('tournamentUpdate', {
+            tournament: serializeTournament(tournament)
+        });
+
+        socket.emit('tournamentJoined', {
+            tournamentId: tournament.id,
+            playerId: socket.id,
+            tournament: serializeTournament(tournament)
+        });
+    });
+
+    // ===== AJOUTER UN BOT AU CHAMPIONNAT =====
+    socket.on('addTournamentBot', function(data) {
+        const tournament = tournaments.get(data.tournamentId);
+        if (!tournament) return socket.emit('error', { message: 'Championnat introuvable' });
+        if (tournament.status !== 'lobby') return socket.emit('error', { message: 'Déjà commencé' });
+        if (tournament.hostId !== socket.id) return socket.emit('error', { message: "Seul l'hôte peut ajouter des bots" });
+        if (tournament.participants.length >= tournament.playerCount) return socket.emit('error', { message: 'Complet' });
+
+        const existingNames = tournament.participants.map(function(p) { return p.name; });
+        const botName = aiLogic.getRandomBotName(existingNames);
+        const botId = 'bot_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+
+        tournament.participants.push({
+            id: botId,
+            name: botName,
+            isBot: true,
+            botDifficulty: data.difficulty || 'medium',
+            isConnected: true,
+            eliminated: false,
+            matchesWon: 0
+        });
+
+        io.to(tournament.id).emit('tournamentUpdate', {
+            tournament: serializeTournament(tournament)
+        });
+    });
+
+    // ===== DÉMARRER LE CHAMPIONNAT =====
+    socket.on('startTournament', function(data) {
+        const tournament = tournaments.get(data.tournamentId);
+        if (!tournament) return socket.emit('error', { message: 'Championnat introuvable' });
+        if (tournament.hostId !== socket.id) return socket.emit('error', { message: "Seul l'hôte peut démarrer" });
+        if (tournament.participants.length !== tournament.playerCount) {
+            return socket.emit('error', { message: 'Il faut ' + tournament.playerCount + ' participants' });
+        }
+
+        // Générer les matchs du premier tour
+        generateMatches(tournament);
+
+        tournament.status = 'playing';
+        tournament.currentRound = 1;
+
+        addTournamentLog(tournament, '🏆 Le championnat commence ! Tour 1');
+
+        // Lancer le premier match
+        launchMatch(tournament, 0);
+
+        io.to(tournament.id).emit('tournamentUpdate', {
+            tournament: serializeTournament(tournament)
+        });
+    });
+
+    // ===== REJOINDRE UNE PARTIE CLASSIQUE =====
     socket.on('joinGame', function(data) {
         const game = games.get(data.gameId);
-
         if (!game) return socket.emit('error', { message: 'Partie introuvable' });
         if (game.status !== 'waiting') return socket.emit('error', { message: 'La partie a déjà commencé' });
         if (game.players.length >= game.maxPlayers) return socket.emit('error', { message: 'La partie est complète' });
@@ -433,12 +614,13 @@ io.on('connection', function(socket) {
         });
     });
 
+    // ===== AJOUTER UN BOT =====
     socket.on('addBot', function(data) {
         const game = games.get(data.gameId);
         if (!game) return socket.emit('error', { message: 'Partie introuvable' });
-        if (game.status !== 'waiting') return socket.emit('error', { message: 'La partie a déjà commencé' });
+        if (game.status !== 'waiting') return socket.emit('error', { message: 'Déjà commencé' });
         if (game.hostId !== socket.id) return socket.emit('error', { message: "Seul l'hôte peut ajouter des bots" });
-        if (game.players.length >= game.maxPlayers) return socket.emit('error', { message: 'La partie est complète' });
+        if (game.players.length >= game.maxPlayers) return socket.emit('error', { message: 'Complet' });
 
         const existingNames = game.players.map(function(p) { return p.name; });
         const botName = aiLogic.getRandomBotName(existingNames);
@@ -495,6 +677,7 @@ io.on('connection', function(socket) {
         });
     });
 
+    // ===== JOUER DES CARTES =====
     socket.on('playCards', function(data) {
         const game = games.get(data.gameId);
         if (!game) return socket.emit('error', { message: 'Partie introuvable' });
@@ -520,12 +703,11 @@ io.on('connection', function(socket) {
             }
         }
 
+        // Blocage
         if (game.pendingDraw > 0) {
             const canBlock = cards.every(function(c) { return c.type === 'joker' || c.rank === '7'; });
             if (!canBlock) {
-                return socket.emit('error', {
-                    message: 'Bloquez avec un 7 ou Joker, ou piochez ' + game.pendingDraw + ' cartes'
-                });
+                return socket.emit('error', { message: 'Bloquez avec un 7 ou Joker, ou piochez ' + game.pendingDraw + ' cartes' });
             }
 
             let totalDraw = game.pendingDraw;
@@ -540,12 +722,21 @@ io.on('connection', function(socket) {
             });
 
             game.centerCard = cards[cards.length - 1];
+
+            const lastBlocker = cards[cards.length - 1];
+            if (lastBlocker.type === 'joker') {
+                game.imposedColor = lastBlocker.color;
+                game.imposedSuit = null;
+            }
+
             game.pendingDraw = totalDraw;
             game.pendingDrawFrom = socket.id;
 
             addLog(game, '🛡️ ' + player.name + ' bloque et renvoie ' + game.pendingDraw + ' cartes !');
 
             checkPlayerFinished(game, player);
+            if (game.status === 'finished') { broadcastGameUpdate(game); return; }
+
             nextPlayer(game);
             checkNextPlayerCanBlock(game);
 
@@ -554,20 +745,31 @@ io.on('connection', function(socket) {
             return;
         }
 
+        // Cas normal
         for (let i = 0; i < cards.length; i++) {
-            if (!gameLogic.canPlayCard(cards[i], game.centerCard, game.imposedSuit)) {
+            if (!gameLogic.canPlayCard(cards[i], game.centerCard, game.imposedSuit, game.imposedColor)) {
                 return socket.emit('error', { message: formatCard(cards[i]) + ' ne peut pas être jouée' });
             }
         }
 
         const jackPlayed = cards.find(function(c) { return c.rank === 'J'; });
+        const jokerPlayed = cards.find(function(c) { return c.type === 'joker'; });
+        const sevenPlayed = cards.find(function(c) { return c.rank === '7'; });
+        const acePlayed = cards.find(function(c) { return c.rank === 'A'; });
+
         if (jackPlayed && data.imposedSuit) {
             game.imposedSuit = data.imposedSuit;
+            game.imposedColor = null;
             addLog(game, '🎭 ' + player.name + ' impose ' + data.imposedSuit);
         } else if (jackPlayed && !data.imposedSuit) {
             return socket.emit('error', { message: 'Vous devez imposer une couleur avec le J' });
+        } else if (jokerPlayed) {
+            game.imposedColor = jokerPlayed.color;
+            game.imposedSuit = null;
+            addLog(game, '🃏 ' + player.name + ' joue un Joker ' + jokerPlayed.jokerColor);
         } else {
             game.imposedSuit = null;
+            game.imposedColor = null;
         }
 
         cards.forEach(function(card) {
@@ -581,7 +783,24 @@ io.on('connection', function(socket) {
 
         addLog(game, '▶️ ' + player.name + ' joue ' + cards.map(formatCard).join(', '));
 
+        // Émettre un événement d'animation
+        let animationType = null;
+        if (jokerPlayed) animationType = 'joker';
+        else if (sevenPlayed) animationType = 'seven';
+        else if (acePlayed) animationType = 'ace';
+        else if (jackPlayed) animationType = 'jack';
+
+        if (animationType) {
+            io.to(game.id).emit('cardAnimation', {
+                type: animationType,
+                color: jokerPlayed ? jokerPlayed.color : null,
+                playerName: player.name
+            });
+        }
+
         checkPlayerFinished(game, player);
+        if (game.status === 'finished') { broadcastGameUpdate(game); return; }
+
         nextPlayer(game);
 
         if (game.skipNext) {
@@ -596,6 +815,7 @@ io.on('connection', function(socket) {
         setTimeout(function() { triggerBotIfNeeded(game); }, 1500);
     });
 
+    // ===== PIOCHER =====
     socket.on('drawCard', function(data) {
         const game = games.get(data.gameId);
         if (!game) return socket.emit('error', { message: 'Partie introuvable' });
@@ -603,7 +823,7 @@ io.on('connection', function(socket) {
 
         const player = game.players.find(function(p) { return p.id === socket.id; });
         if (!player) return socket.emit('error', { message: 'Joueur introuvable' });
-        if (player.rank) return socket.emit('error', { message: 'Vous avez déjà terminé' });
+        if (player.rank) return socket.emit('error', { message: 'Déjà terminé' });
 
         const currentPlayer = game.players[game.currentPlayerIndex];
         if (currentPlayer.id !== socket.id) return socket.emit('error', { message: "Ce n'est pas votre tour" });
@@ -626,6 +846,7 @@ io.on('connection', function(socket) {
         setTimeout(function() { triggerBotIfNeeded(game); }, 1500);
     });
 
+    // ===== QUITTER =====
     socket.on('leaveGame', function(data) {
         const game = games.get(data.gameId);
         if (!game) return;
@@ -644,25 +865,280 @@ io.on('connection', function(socket) {
         }
     });
 
+    // ===== QUITTER CHAMPIONNAT =====
+    socket.on('leaveTournament', function(data) {
+        const tournament = tournaments.get(data.tournamentId);
+        if (!tournament) return;
+
+        tournament.participants = tournament.participants.filter(function(p) { return p.id !== socket.id; });
+        socket.leave(data.tournamentId);
+        playerRooms.delete(socket.id);
+
+        if (tournament.participants.length === 0) {
+            tournaments.delete(data.tournamentId);
+        } else {
+            io.to(data.tournamentId).emit('tournamentUpdate', {
+                tournament: serializeTournament(tournament)
+            });
+        }
+    });
+
     socket.on('disconnect', function() {
         console.log('🔌 Client déconnecté:', socket.id);
         const room = playerRooms.get(socket.id);
         if (room) {
-            const game = games.get(room.gameId);
-            if (game) {
-                const player = game.players.find(function(p) { return p.id === socket.id; });
-                if (player) {
-                    player.isConnected = false;
-                    io.to(room.gameId).emit('playerDisconnected', {
-                        playerId: socket.id,
-                        playerName: player.name
-                    });
+            if (room.gameId) {
+                const game = games.get(room.gameId);
+                if (game) {
+                    const player = game.players.find(function(p) { return p.id === socket.id; });
+                    if (player) {
+                        player.isConnected = false;
+                        io.to(room.gameId).emit('playerDisconnected', {
+                            playerId: socket.id,
+                            playerName: player.name
+                        });
+                    }
+                }
+            }
+            if (room.tournamentId) {
+                const tournament = tournaments.get(room.tournamentId);
+                if (tournament) {
+                    const p = tournament.participants.find(function(x) { return x.id === socket.id; });
+                    if (p) {
+                        p.isConnected = false;
+                        io.to(room.tournamentId).emit('tournamentUpdate', {
+                            tournament: serializeTournament(tournament)
+                        });
+                    }
                 }
             }
             playerRooms.delete(socket.id);
         }
     });
 });
+
+// ===== CHAMPIONNAT =====
+
+// Générer les matchs d'un tour
+function generateMatches(tournament) {
+    const participants = tournament.participants.slice();
+    // Mélanger
+    for (let i = participants.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = participants[i]; participants[i] = participants[j]; participants[j] = tmp;
+    }
+
+    const matches = [];
+    for (let i = 0; i < participants.length; i += 2) {
+        matches.push({
+            id: 'match_' + Date.now() + '_' + i,
+            round: tournament.currentRound,
+            player1: participants[i],
+            player2: participants[i + 1] || null,
+            winner: null,
+            loser: null,
+            gameId: null,
+            status: 'pending'
+        });
+    }
+
+    tournament.matches = matches;
+    tournament.currentMatchIndex = 0;
+}
+
+// Lancer un match
+function launchMatch(tournament, index) {
+    if (index >= tournament.matches.length) {
+        // Tous les matchs du tour sont joués
+        endTournamentRound(tournament);
+        return;
+    }
+
+    const match = tournament.matches[index];
+    match.status = 'playing';
+
+    // Créer une partie pour ce match
+    const gameId = 'game_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    const game = {
+        id: gameId,
+        hostId: match.player1.id,
+        players: [
+            {
+                id: match.player1.id,
+                name: match.player1.name,
+                hand: [],
+                isActive: true,
+                isConnected: true,
+                isBot: match.player1.isBot,
+                botDifficulty: match.player1.botDifficulty || 'medium',
+                rank: null
+            },
+            {
+                id: match.player2.id,
+                name: match.player2.name,
+                hand: [],
+                isActive: true,
+                isConnected: true,
+                isBot: match.player2.isBot,
+                botDifficulty: match.player2.botDifficulty || 'medium',
+                rank: null
+            }
+        ],
+        maxPlayers: 2,
+        status: 'playing',
+        bank: [],
+        pile: [],
+        centerCard: null,
+        currentPlayerIndex: 0,
+        direction: 1,
+        imposedSuit: null,
+        imposedColor: null,
+        pendingDraw: 0,
+        pendingDrawFrom: null,
+        skipNext: false,
+        turnCount: 0,
+        finishedPlayers: [],
+        log: [],
+        botTimeout: null,
+        mode: 'tournament',
+        tournamentId: tournament.id,
+        matchId: match.id
+    };
+
+    games.set(gameId, game);
+    match.gameId = gameId;
+
+    // Démarrer immédiatement
+    startGame(gameId);
+
+    // Notifier les joueurs (s'ils sont connectés)
+    game.players.forEach(function(p) {
+        if (!p.isBot) {
+            io.to(p.id).emit('gameStarted', {
+                game: serializeGame(game, p.id),
+                tournament: serializeTournament(tournament),
+                matchInfo: {
+                    round: tournament.currentRound,
+                    matchIndex: index,
+                    totalMatches: tournament.matches.length
+                }
+            });
+        }
+    });
+
+    // Écouter la fin de cette partie
+    const checkInterval = setInterval(function() {
+        const g = games.get(gameId);
+        if (!g || g.status === 'finished') {
+            clearInterval(checkInterval);
+            if (g && g.status === 'finished') {
+                handleMatchEnd(tournament, match, g);
+            }
+        }
+    }, 1000);
+}
+
+// Fin d'un match
+function handleMatchEnd(tournament, match, game) {
+    if (match.status === 'finished') return;
+    match.status = 'finished';
+
+    const winner = game.finishedPlayers[0];
+    const loser = game.finishedPlayers[game.finishedPlayers.length - 1];
+
+    match.winner = winner;
+    match.loser = loser;
+
+    addTournamentLog(tournament,
+        '🏆 ' + winner.name + ' bat ' + loser.name + ' (Tour ' + tournament.currentRound + ')');
+
+    // Marquer le perdant comme éliminé
+    const loserP = tournament.participants.find(function(p) { return p.id === loser.id; });
+    if (loserP) loserP.eliminated = true;
+
+    // Notifier les joueurs
+    io.to(tournament.id).emit('matchEnded', {
+        tournament: serializeTournament(tournament),
+        match: {
+            id: match.id,
+            round: match.round,
+            winner: winner,
+            loser: loser
+        }
+    });
+
+    // Passer au match suivant
+    tournament.currentMatchIndex++;
+    setTimeout(function() {
+        launchMatch(tournament, tournament.currentMatchIndex);
+    }, 3000);
+}
+
+// Fin d'un tour du championnat
+function endTournamentRound(tournament) {
+    const survivors = tournament.participants.filter(function(p) { return !p.eliminated; });
+
+    addTournamentLog(tournament,
+        '✅ Fin du tour ' + tournament.currentRound + ' — ' + survivors.length + ' survivants');
+
+    // Si un seul survivant → champion
+    if (survivors.length === 1) {
+        tournament.status = 'finished';
+        tournament.winner = survivors[0];
+
+        io.to(tournament.id).emit('tournamentFinished', {
+            tournament: serializeTournament(tournament),
+            champion: survivors[0],
+            finalRanking: tournament.participants
+        });
+
+        console.log('🏆 Champion du tournoi : ' + survivors[0].name);
+        return;
+    }
+
+    // Sinon, on lance le tour suivant
+    tournament.currentRound++;
+    tournament.participants = survivors;
+    tournament.currentMatchIndex = 0;
+
+    generateMatches(tournament);
+
+    io.to(tournament.id).emit('tournamentUpdate', {
+        tournament: serializeTournament(tournament)
+    });
+
+    setTimeout(function() {
+        launchMatch(tournament, 0);
+    }, 3000);
+}
+
+// Sérialiser un tournoi
+function serializeTournament(tournament) {
+    return {
+        id: tournament.id,
+        hostId: tournament.hostId,
+        hostName: tournament.hostName,
+        playerCount: tournament.playerCount,
+        participants: tournament.participants,
+        status: tournament.status,
+        currentRound: tournament.currentRound,
+        totalRounds: tournament.totalRounds,
+        matches: tournament.matches.map(function(m) {
+            return {
+                id: m.id,
+                round: m.round,
+                player1: m.player1 ? { id: m.player1.id, name: m.player1.name, isBot: m.player1.isBot } : null,
+                player2: m.player2 ? { id: m.player2.id, name: m.player2.name, isBot: m.player2.isBot } : null,
+                winner: m.winner ? { id: m.winner.id, name: m.winner.name } : null,
+                loser: m.loser ? { id: m.loser.id, name: m.loser.name } : null,
+                status: m.status
+            };
+        }),
+        currentMatchIndex: tournament.currentMatchIndex,
+        log: tournament.log.slice(-30),
+        winner: tournament.winner || null
+    };
+}
 
 // ===== LANCEMENT =====
 server.listen(PORT, '0.0.0.0', function() {

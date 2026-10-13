@@ -126,6 +126,7 @@ body {
     position: relative;
     z-index: 1;
 }
+
 .screen.active {
     display: block;
     animation: screenFadeIn 0.5s ease;
@@ -418,6 +419,17 @@ body {
     50%      { box-shadow: 0 8px 24px rgba(255, 101, 132, 0.4), 0 0 0 8px rgba(255, 101, 132, 0); }
 }
 
+/* Bouton championnat */
+.btn-tournament {
+    background: linear-gradient(135deg, #F39C12 0%, #E67E22 100%);
+    color: white;
+    box-shadow: 0 8px 24px rgba(243, 156, 18, 0.4);
+}
+.btn-tournament:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(243, 156, 18, 0.6);
+}
+
 /* Bouton ghost */
 .btn-ghost {
     background: transparent;
@@ -536,7 +548,7 @@ body {
 }
 
 .rules-body.open {
-    max-height: 700px;
+    max-height: 900px;
 }
 
 .rule-item {
@@ -573,7 +585,7 @@ body {
 }
 
 /* ============================================================= */
-/* WAITING SCREEN                                                */
+/* WAITING / TOURNAMENT SCREENS                                  */
 /* ============================================================= */
 .waiting-container {
     max-width: 600px;
@@ -632,6 +644,7 @@ body {
     border-radius: 12px;
     border: 1px solid var(--border);
     letter-spacing: 1px;
+    word-break: break-all;
 }
 
 .players-card {
@@ -1596,6 +1609,314 @@ body {
 }
 
 /* ============================================================= */
+/* MODAL CHAMPIONNAT (création)                                  */
+/* ============================================================= */
+.tournament-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.tournament-option {
+    padding: 24px 16px;
+    background: rgba(15, 14, 30, 0.6);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: var(--transition-bounce);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+}
+
+.tournament-option:hover {
+    border-color: var(--warning);
+    background: rgba(243, 156, 18, 0.1);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(243, 156, 18, 0.3);
+}
+
+.tournament-option-icon {
+    font-size: 40px;
+    line-height: 1;
+}
+
+.tournament-option-title {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.tournament-option-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+/* ============================================================= */
+/* MODAL CHAMPION (fin de championnat)                           */
+/* ============================================================= */
+.modal-champion {
+    text-align: center;
+    background: linear-gradient(135deg, rgba(30, 29, 53, 0.98), rgba(60, 40, 20, 0.98));
+    border: 2px solid var(--warning);
+    box-shadow: 0 0 60px rgba(243, 156, 18, 0.6);
+}
+
+.champion-crown {
+    font-size: 100px;
+    margin-bottom: 8px;
+    animation: crownBounce 1.5s ease-in-out infinite;
+    filter: drop-shadow(0 8px 32px rgba(243, 156, 18, 0.8));
+}
+
+@keyframes crownBounce {
+    0%, 100% { transform: translateY(0) scale(1) rotate(-5deg); }
+    50%      { transform: translateY(-14px) scale(1.1) rotate(5deg); }
+}
+
+.modal-champion h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 42px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, #FFD700, #F39C12, #E67E22);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+    animation: championGlow 2s ease-in-out infinite;
+}
+
+@keyframes championGlow {
+    0%, 100% { filter: brightness(1); }
+    50%      { filter: brightness(1.4); }
+}
+
+.champion-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: white;
+    padding: 16px 32px;
+    background: linear-gradient(135deg, rgba(243, 156, 18, 0.3), rgba(230, 126, 34, 0.3));
+    border: 2px solid var(--warning);
+    border-radius: var(--radius);
+    margin: 0 auto 20px;
+    display: inline-block;
+    box-shadow: 0 8px 32px rgba(243, 156, 18, 0.5);
+    animation: championNameIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes championNameIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+/* ============================================================= */
+/* OVERLAY D'ANIMATION DE CARTE (Joker, 7, J, As)               */
+/* ============================================================= */
+.card-animation-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1500;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.card-animation-overlay.active {
+    opacity: 1;
+}
+
+.card-animation-overlay.hidden {
+    display: none;
+}
+
+.card-animation-bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+}
+
+/* Couleurs selon le type */
+.card-animation-bg.joker-red {
+    background: radial-gradient(circle at center, rgba(231, 76, 60, 0.9), rgba(120, 20, 10, 0.98));
+    animation: bgPulseRed 1.3s ease-in-out;
+}
+
+.card-animation-bg.joker-black {
+    background: radial-gradient(circle at center, rgba(44, 62, 80, 0.95), rgba(5, 5, 15, 0.99));
+    animation: bgPulseBlack 1.3s ease-in-out;
+}
+
+.card-animation-bg.seven-red {
+    background: radial-gradient(circle at center, rgba(231, 76, 60, 0.85), rgba(120, 20, 10, 0.95));
+    animation: bgPulseRed 1.3s ease-in-out;
+}
+
+.card-animation-bg.seven-black {
+    background: radial-gradient(circle at center, rgba(44, 62, 80, 0.9), rgba(5, 5, 15, 0.98));
+    animation: bgPulseBlack 1.3s ease-in-out;
+}
+
+.card-animation-bg.jack {
+    background: radial-gradient(circle at center, rgba(243, 156, 18, 0.9), rgba(150, 80, 10, 0.98));
+    animation: bgPulseYellow 1.3s ease-in-out;
+}
+
+.card-animation-bg.ace {
+    background: radial-gradient(circle at center, rgba(46, 204, 113, 0.9), rgba(20, 100, 50, 0.98));
+    animation: bgPulseGreen 1.3s ease-in-out;
+}
+
+@keyframes bgPulseRed {
+    0%   { opacity: 0; transform: scale(0.8); }
+    20%  { opacity: 1; transform: scale(1); }
+    80%  { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.1); }
+}
+
+@keyframes bgPulseBlack {
+    0%   { opacity: 0; transform: scale(0.8); }
+    20%  { opacity: 1; transform: scale(1); }
+    80%  { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.1); }
+}
+
+@keyframes bgPulseYellow {
+    0%   { opacity: 0; transform: scale(0.8); }
+    20%  { opacity: 1; transform: scale(1); }
+    80%  { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.1); }
+}
+
+@keyframes bgPulseGreen {
+    0%   { opacity: 0; transform: scale(0.8); }
+    20%  { opacity: 1; transform: scale(1); }
+    80%  { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.1); }
+}
+
+.card-animation-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+    color: white;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+    padding: 0 20px;
+}
+
+.card-animation-emoji {
+    font-size: 140px;
+    line-height: 1;
+    animation: cardAnimPop 1.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    filter: drop-shadow(0 8px 32px rgba(0, 0, 0, 0.6));
+}
+
+.card-animation-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 52px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    animation: cardAnimTitleIn 1.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.card-animation-subtitle {
+    font-size: 18px;
+    font-weight: 600;
+    opacity: 0.95;
+    animation: cardAnimSubIn 1.3s ease forwards;
+    max-width: 500px;
+}
+
+@keyframes cardAnimPop {
+    0%   { transform: scale(0) rotate(-180deg); opacity: 0; }
+    35%  { transform: scale(1.4) rotate(10deg); opacity: 1; }
+    55%  { transform: scale(1) rotate(0deg); opacity: 1; }
+    100% { transform: scale(1.6) rotate(0deg); opacity: 0; }
+}
+
+@keyframes cardAnimTitleIn {
+    0%   { transform: scale(0.3) translateY(40px); opacity: 0; }
+    35%  { transform: scale(1.2) translateY(0); opacity: 1; }
+    55%  { transform: scale(1) translateY(0); opacity: 1; }
+    100% { transform: scale(1.25) translateY(-20px); opacity: 0; }
+}
+
+@keyframes cardAnimSubIn {
+    0%   { opacity: 0; transform: translateY(20px); }
+    35%  { opacity: 1; transform: translateY(0); }
+    75%  { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-10px); }
+}
+
+.card-animation-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.card-particle {
+    position: absolute;
+    opacity: 0;
+    animation: particleFloat 1.6s ease-out forwards;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+}
+
+@keyframes particleFloat {
+    0%   { opacity: 0; transform: translateY(0) scale(0.4); }
+    25%  { opacity: 1; transform: translateY(-40px) scale(1); }
+    100% { opacity: 0; transform: translateY(-300px) scale(0.3); }
+}
+
+/* ============================================================= */
+/* CONFETTIS                                                     */
+/* ============================================================= */
+.confetti-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1400;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.confetti-overlay.hidden {
+    display: none;
+}
+
+.confetti-piece {
+    position: absolute;
+    top: -30px;
+    opacity: 0.95;
+    animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(115vh) rotate(720deg);
+        opacity: 0.6;
+    }
+}
+
+/* ============================================================= */
 /* NOTIFICATION                                                  */
 /* ============================================================= */
 .notification {
@@ -1810,6 +2131,32 @@ body {
         max-width: none;
         font-size: 13px;
         padding: 14px 16px;
+    }
+
+    /* Animations adaptées mobile */
+    .card-animation-emoji {
+        font-size: 100px;
+    }
+    .card-animation-title {
+        font-size: 32px;
+        letter-spacing: 1px;
+    }
+    .card-animation-subtitle {
+        font-size: 14px;
+        padding: 0 20px;
+    }
+    .champion-crown {
+        font-size: 72px;
+    }
+    .modal-champion h2 {
+        font-size: 30px;
+    }
+    .champion-name {
+        font-size: 20px;
+        padding: 12px 24px;
+    }
+    .tournament-options {
+        grid-template-columns: 1fr;
     }
 }
 

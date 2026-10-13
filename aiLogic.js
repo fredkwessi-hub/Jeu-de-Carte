@@ -12,6 +12,7 @@ function chooseMove(botHand, gameState, difficulty) {
     difficulty = difficulty || DIFFICULTY.MEDIUM;
     const centerCard = gameState.centerCard;
     const imposedSuit = gameState.imposedSuit;
+    const imposedColor = gameState.imposedColor;
     const pendingDraw = gameState.pendingDraw;
 
     // CAS ATTAQUE
@@ -39,7 +40,7 @@ function chooseMove(botHand, gameState, difficulty) {
         return { action: 'draw' };
     }
 
-    // CAS COULEUR IMPOSÉE
+    // CAS COULEUR IMPOSÉE PAR UN J (symbole)
     if (imposedSuit) {
         const matchingSuit = botHand.filter(function(c) { return c.suit === imposedSuit; });
         const jokers = botHand.filter(function(c) { return c.type === 'joker'; });
@@ -53,9 +54,41 @@ function chooseMove(botHand, gameState, difficulty) {
         return { action: 'draw' };
     }
 
+    // CAS COULEUR IMPOSÉE PAR UN JOKER (rouge/noir)
+    if (imposedColor) {
+        const matchingColor = botHand.filter(function(c) {
+            return c.color === imposedColor && c.type !== 'joker';
+        });
+        const jokers = botHand.filter(function(c) { return c.type === 'joker'; });
+
+        if (matchingColor.length > 0) {
+            return chooseBestCard(matchingColor, centerCard, difficulty, gameState, botHand);
+        }
+        if (jokers.length > 0) {
+            return { action: 'play', cards: [jokers[0]] };
+        }
+        return { action: 'draw' };
+    }
+
+    // CAS CENTRE EST UN JOKER
+    if (centerCard && centerCard.type === 'joker') {
+        const matchingColor = botHand.filter(function(c) {
+            return c.color === centerCard.color && c.type !== 'joker';
+        });
+        const jokers = botHand.filter(function(c) { return c.type === 'joker'; });
+
+        if (matchingColor.length > 0) {
+            return chooseBestCard(matchingColor, centerCard, difficulty, gameState, botHand);
+        }
+        if (jokers.length > 0) {
+            return { action: 'play', cards: [jokers[0]] };
+        }
+        return { action: 'draw' };
+    }
+
     // CAS NORMAL
     const playable = botHand.filter(function(c) {
-        return gameLogic.canPlayCard(c, centerCard, null);
+        return gameLogic.canPlayCard(c, centerCard, null, null);
     });
 
     if (playable.length === 0) {

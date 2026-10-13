@@ -118,12 +118,22 @@ function drawCenterCard(bank) {
 }
 
 // ===== VALIDATION =====
-function canPlayCard(card, centerCard, imposedSuit) {
+function canPlayCard(card, centerCard, imposedSuit, imposedColor) {
     if (!card) return false;
 
     if (imposedSuit) {
         if (card.type === 'joker') return true;
         return card.suit === imposedSuit;
+    }
+
+    if (imposedColor) {
+        if (card.type === 'joker') return true;
+        return card.color === imposedColor;
+    }
+
+    if (centerCard && centerCard.type === 'joker') {
+        if (card.type === 'joker') return true;
+        return card.color === centerCard.color;
     }
 
     if (card.type === 'joker') return true;
@@ -135,8 +145,10 @@ function canPlayCard(card, centerCard, imposedSuit) {
     return false;
 }
 
-function hasValidMove(hand, centerCard, imposedSuit) {
-    return hand.some(function(card) { return canPlayCard(card, centerCard, imposedSuit); });
+function hasValidMove(hand, centerCard, imposedSuit, imposedColor) {
+    return hand.some(function(card) {
+        return canPlayCard(card, centerCard, imposedSuit, imposedColor);
+    });
 }
 
 // ===== EFFETS =====
@@ -144,7 +156,7 @@ function getCardEffect(card) {
     if (!card) return { type: 'none' };
 
     if (card.type === 'joker') {
-        return { type: 'joker', drawCount: 4, blockable: true };
+        return { type: 'joker', drawCount: 4, blockable: true, imposeColor: true };
     }
     if (card.rank === '7') {
         return { type: 'seven', drawCount: 2, blockable: true };
@@ -186,8 +198,10 @@ function canBlockAttack(hand) {
     });
 }
 
-function getPlayableCards(hand, centerCard, imposedSuit) {
-    return hand.filter(function(card) { return canPlayCard(card, centerCard, imposedSuit); });
+function getPlayableCards(hand, centerCard, imposedSuit, imposedColor) {
+    return hand.filter(function(card) {
+        return canPlayCard(card, centerCard, imposedSuit, imposedColor);
+    });
 }
 
 function groupByRank(hand) {

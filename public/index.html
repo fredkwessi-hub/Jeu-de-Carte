@@ -13,7 +13,7 @@
 </head>
 <body>
 
-<!-- ===== FOND ANIMÉ (Cartes flottantes) ===== -->
+<!-- ===== FOND ANIMÉ ===== -->
 <div class="bg-cards" aria-hidden="true">
     <div class="bg-card" style="--x: 5%; --delay: 0s; --dur: 22s;">♠</div>
     <div class="bg-card" style="--x: 18%; --delay: 3s; --dur: 26s;">♥</div>
@@ -24,9 +24,20 @@
     <div class="bg-card" style="--x: 92%; --delay: 2s; --dur: 25s;">♦</div>
 </div>
 
-<!-- ===== HALOS LUMINEUX ===== -->
+<!-- ===== HALOS ===== -->
 <div class="glow glow-1" aria-hidden="true"></div>
 <div class="glow glow-2" aria-hidden="true"></div>
+
+<!-- ===== OVERLAY D'ANIMATION (JOKER, 7, J, AS) ===== -->
+<div id="cardAnimationOverlay" class="card-animation-overlay hidden" aria-hidden="true">
+    <div id="cardAnimationBg" class="card-animation-bg"></div>
+    <div id="cardAnimationContent" class="card-animation-content"></div>
+</div>
+
+<!-- ===== OVERLAY CONFETTIS (victoire) ===== -->
+<div id="confettiOverlay" class="confetti-overlay hidden" aria-hidden="true">
+    <div id="confettiContainer"></div>
+</div>
 
 <!-- ============================================================= -->
 <!-- ÉCRAN D'ACCUEIL                                              -->
@@ -34,7 +45,6 @@
 <div id="lobbyScreen" class="screen active">
     <div class="lobby-container">
 
-        <!-- Logo animé -->
         <div class="lobby-logo">
             <div class="logo-cards">
                 <span class="logo-card logo-card-1">♠</span>
@@ -48,7 +58,6 @@
         </h1>
         <p class="subtitle">Affrontez vos amis ou l'IA</p>
 
-        <!-- Carte principale (glassmorphism) -->
         <div class="glass-card">
             <div class="form-group">
                 <label for="playerName">Votre nom</label>
@@ -64,19 +73,23 @@
                 <span class="btn-text">Partie rapide contre l'IA</span>
             </button>
 
-            <div class="divider">
-                <span>OU</span>
-            </div>
+            <div class="divider"><span>OU</span></div>
 
             <button id="createGameBtn" class="btn btn-primary">
                 <span class="btn-shine"></span>
                 <span class="btn-icon">🎮</span>
-                <span class="btn-text">Créer une partie</span>
+                <span class="btn-text">Créer une partie multijoueur</span>
             </button>
 
-            <div class="divider">
-                <span>OU</span>
-            </div>
+            <div class="divider"><span>OU</span></div>
+
+            <button id="createTournamentBtn" class="btn btn-tournament">
+                <span class="btn-shine"></span>
+                <span class="btn-icon">🏆</span>
+                <span class="btn-text">Mode Championnat</span>
+            </button>
+
+            <div class="divider"><span>OU</span></div>
 
             <div class="form-group">
                 <label for="gameCodeInput">Code de la partie</label>
@@ -92,7 +105,7 @@
             </button>
         </div>
 
-        <!-- Règles en accordéon -->
+        <!-- Règles -->
         <div class="rules-accordion">
             <button class="rules-toggle" id="rulesToggle">
                 <span class="rules-toggle-icon">📖</span>
@@ -104,21 +117,28 @@
                     <span class="rule-emoji">🎯</span>
                     <div>
                         <strong>Superposition</strong>
-                        <p>Même <em>numéro</em> ou même <em>couleur</em> que la carte centrale.</p>
+                        <p>Même <em>numéro</em> ou même <em>couleur de symbole</em> (♠ ♦ ♥ ♣) que la carte centrale.</p>
                     </div>
                 </div>
                 <div class="rule-item">
                     <span class="rule-emoji">🃏</span>
                     <div>
                         <strong>Joker</strong>
-                        <p>+4 cartes au joueur suivant. Bloquable par un autre 7 ou Joker.</p>
+                        <p>Peut être posé sur n'importe quelle carte. <em>+4 cartes</em> au suivant et <em>impose sa couleur</em> (rouge ou noir).</p>
+                    </div>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-emoji">🎨</span>
+                    <div>
+                        <strong>Joker imposant sa couleur</strong>
+                        <p>Joker <em>rouge</em> → le suivant doit jouer du rouge (♥ ♦). Joker <em>noir</em> → du noir (♠ ♣). Un autre Joker peut toujours être posé.</p>
                     </div>
                 </div>
                 <div class="rule-item">
                     <span class="rule-emoji">7️⃣</span>
                     <div>
                         <strong>Sept</strong>
-                        <p>+2 cartes au joueur suivant. Cumulable avec un autre 7 ou Joker.</p>
+                        <p><em>+2 cartes</em> au joueur suivant. Cumulable avec un autre 7 ou Joker.</p>
                     </div>
                 </div>
                 <div class="rule-item">
@@ -132,7 +152,14 @@
                     <span class="rule-emoji">🎭</span>
                     <div>
                         <strong>Valet (J)</strong>
-                        <p>Impose une couleur au joueur suivant.</p>
+                        <p>Impose une couleur de symbole au joueur suivant (♠ ♦ ♥ ♣).</p>
+                    </div>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-emoji">🛡️</span>
+                    <div>
+                        <strong>Blocage d'attaque</strong>
+                        <p>Bloquez avec un <em>7</em> ou un <em>Joker</em> et renvoyez l'attaque au suivant.</p>
                     </div>
                 </div>
                 <div class="rule-item">
@@ -142,13 +169,20 @@
                         <p>Si vous ne pouvez pas jouer, piochez et passez votre tour.</p>
                     </div>
                 </div>
+                <div class="rule-item">
+                    <span class="rule-emoji">🏆</span>
+                    <div>
+                        <strong>Mode Championnat</strong>
+                        <p>Tounoi à élimination directe. Le perdant de chaque duel est éliminé. Le dernier survivant est champion !</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- ============================================================= -->
-<!-- ÉCRAN D'ATTENTE                                              -->
+<!-- ÉCRAN D'ATTENTE PARTIE                                       -->
 <!-- ============================================================= -->
 <div id="waitingScreen" class="screen">
     <div class="waiting-container">
@@ -186,9 +220,50 @@
         </button>
         <p id="waitingMessage" class="waiting-message">En attente d'autres joueurs...</p>
 
-        <button id="backToLobbyBtn" class="btn btn-ghost btn-sm" style="margin-top: 16px;">
-            ← Retour au menu
+        <button id="backToLobbyBtn" class="btn btn-ghost btn-sm" style="margin-top: 16px;">← Retour au menu</button>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- ÉCRAN D'ATTENTE CHAMPIONNAT                                  -->
+<!-- ============================================================= -->
+<div id="tournamentScreen" class="screen">
+    <div class="waiting-container">
+        <div class="waiting-header">
+            <h2>🏆 Championnat</h2>
+            <p class="waiting-subtitle" id="tournamentSubtitle">En attente des participants</p>
+        </div>
+
+        <div class="glass-card game-code-card">
+            <span class="game-code-label">Code du championnat</span>
+            <div class="game-code-display">
+                <code id="displayTournamentCode">---</code>
+                <button id="copyTournamentCodeBtn" class="btn-icon" title="Copier">📋</button>
+            </div>
+        </div>
+
+        <div class="glass-card players-card">
+            <h3>Participants (<span id="tournamentPlayerCount">1</span>/<span id="tournamentMaxPlayers">4</span>)</h3>
+            <div id="tournamentPlayersList" class="players-list-content"></div>
+        </div>
+
+        <div class="bot-controls" id="tournamentBotControls" style="display:none;">
+            <select id="tournamentBotDifficulty" class="form-control">
+                <option value="easy">😊 Facile</option>
+                <option value="medium" selected>😐 Moyen</option>
+                <option value="hard">😈 Difficile</option>
+            </select>
+            <button id="addTournamentBotBtn" class="btn btn-secondary btn-sm">🤖 Ajouter un bot</button>
+        </div>
+
+        <button id="startTournamentBtn" class="btn btn-primary" style="display:none;">
+            <span class="btn-shine"></span>
+            <span class="btn-icon">🚀</span>
+            <span class="btn-text">Démarrer le championnat</span>
         </button>
+        <p id="tournamentWaitingMessage" class="waiting-message">En attente de participants...</p>
+
+        <button id="backToLobbyFromTournamentBtn" class="btn btn-ghost btn-sm" style="margin-top: 16px;">← Retour au menu</button>
     </div>
 </div>
 
@@ -196,7 +271,6 @@
 <!-- ÉCRAN DE JEU                                                 -->
 <!-- ============================================================= -->
 <div id="gameScreen" class="screen">
-    <!-- Header -->
     <header class="game-header">
         <div class="game-header-left">
             <button id="leaveGameBtn" class="btn-icon btn-icon-danger" title="Quitter" aria-label="Quitter la partie">
@@ -212,10 +286,8 @@
         </div>
     </header>
 
-    <!-- Adversaires -->
     <div id="opponentsZone" class="opponents-zone"></div>
 
-    <!-- Zone centrale -->
     <div class="center-zone">
         <div class="pile-area">
             <div class="pile-label">Centre</div>
@@ -235,31 +307,23 @@
         </div>
 
         <div class="turn-info">
-            <div id="currentPlayerIndicator" class="current-player">
-                ⏳ En attente...
-            </div>
+            <div id="currentPlayerIndicator" class="current-player">⏳ En attente...</div>
             <div id="imposedSuitDisplay" class="imposed-suit" style="display:none;"></div>
             <div id="pendingDrawDisplay" class="pending-draw" style="display:none;"></div>
         </div>
     </div>
 
-    <!-- Ma main -->
     <div class="my-hand-zone">
         <div class="hand-header">
             <span class="hand-title">🖐️ Ma main (<span id="myCardCount">0</span>)</span>
             <div class="hand-actions">
-                <button id="playSelectedBtn" class="btn btn-primary btn-sm" disabled>
-                    ▶ Jouer
-                </button>
-                <button id="drawCardBtn" class="btn btn-secondary btn-sm">
-                    📥 Piocher
-                </button>
+                <button id="playSelectedBtn" class="btn btn-primary btn-sm" disabled>▶ Jouer</button>
+                <button id="drawCardBtn" class="btn btn-secondary btn-sm">📥 Piocher</button>
             </div>
         </div>
         <div id="myHand" class="my-hand"></div>
     </div>
 
-    <!-- Journal -->
     <div class="log-panel">
         <div class="log-header" id="logHeader">
             <span>📜 Journal</span>
@@ -276,24 +340,35 @@
 <!-- Modal choix couleur (J) -->
 <div id="suitModal" class="modal">
     <div class="modal-content modal-suit">
-        <h3>🎭 Choisissez une couleur</h3>
-        <p class="modal-subtitle">Le joueur suivant devra jouer cette couleur</p>
+        <h3>🎭 Choisissez une couleur de symbole</h3>
+        <p class="modal-subtitle">Le joueur suivant devra jouer cette couleur (♠ ♦ ♥ ♣)</p>
         <div class="suit-options">
-            <button class="suit-btn" data-suit="pique">
-                <span class="suit-symbol">♠</span>
-                <span class="suit-label">Pique</span>
+            <button class="suit-btn" data-suit="pique"><span class="suit-symbol">♠</span><span class="suit-label">Pique</span></button>
+            <button class="suit-btn" data-suit="carreau"><span class="suit-symbol">♦</span><span class="suit-label">Carreau</span></button>
+            <button class="suit-btn" data-suit="coeur"><span class="suit-symbol">♥</span><span class="suit-label">Coeur</span></button>
+            <button class="suit-btn" data-suit="trefle"><span class="suit-symbol">♣</span><span class="suit-label">Trèfle</span></button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal création championnat -->
+<div id="tournamentModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>🏆 Créer un championnat</h3>
+            <button class="close-btn" onclick="closeModal('tournamentModal')">&times;</button>
+        </div>
+        <p class="modal-subtitle">Choisis le nombre de joueurs</p>
+        <div class="tournament-options">
+            <button class="tournament-option" data-players="4">
+                <span class="tournament-option-icon">🎯</span>
+                <span class="tournament-option-title">4 joueurs</span>
+                <span class="tournament-option-sub">Demi-finales + Finale</span>
             </button>
-            <button class="suit-btn" data-suit="carreau">
-                <span class="suit-symbol">♦</span>
-                <span class="suit-label">Carreau</span>
-            </button>
-            <button class="suit-btn" data-suit="coeur">
-                <span class="suit-symbol">♥</span>
-                <span class="suit-label">Coeur</span>
-            </button>
-            <button class="suit-btn" data-suit="trefle">
-                <span class="suit-symbol">♣</span>
-                <span class="suit-label">Trèfle</span>
+            <button class="tournament-option" data-players="8">
+                <span class="tournament-option-icon">👑</span>
+                <span class="tournament-option-title">8 joueurs</span>
+                <span class="tournament-option-sub">Quarts + Demis + Finale</span>
             </button>
         </div>
     </div>
@@ -310,20 +385,22 @@
             <h4>🎯 But du jeu</h4>
             <p>Se débarrasser de toutes ses cartes le premier.</p>
             <h4>🃏 Superposition</h4>
-            <p>On pose une carte si elle a le <strong>même numéro</strong> OU la <strong>même couleur</strong> que la carte centrale.</p>
+            <p>Même <strong>numéro</strong> OU même <strong>couleur de symbole</strong> (♠ ♦ ♥ ♣).</p>
             <h4>⚡ Cartes spéciales</h4>
             <ul>
-                <li><strong>Joker</strong> : +4 cartes au joueur suivant</li>
-                <li><strong>7</strong> : +2 cartes au joueur suivant</li>
-                <li><strong>As</strong> : suspend le joueur suivant</li>
-                <li><strong>J</strong> : impose une couleur au joueur suivant</li>
+                <li><strong>Joker</strong> : +4 cartes au suivant et impose sa couleur (rouge/noir)</li>
+                <li><strong>7</strong> : +2 cartes au suivant</li>
+                <li><strong>As</strong> : suspend le suivant</li>
+                <li><strong>J</strong> : impose une couleur de symbole</li>
             </ul>
-            <h4>🛡️ Blocage d'attaque</h4>
-            <p>Si vous avez un <strong>7</strong> ou un <strong>Joker</strong>, vous pouvez bloquer et renvoyer l'attaque au joueur suivant.</p>
-            <h4>📥 Piocher</h4>
-            <p>Si vous ne pouvez pas jouer, piochez. <strong>Piocher = passer son tour.</strong></p>
-            <h4>🏆 Fin de partie</h4>
-            <p>Le premier à ne plus avoir de cartes gagne.</p>
+            <h4>🎨 Règle du Joker</h4>
+            <p>Joker <strong>rouge</strong> → le suivant doit jouer du rouge (♥ ♦).</p>
+            <p>Joker <strong>noir</strong> → le suivant doit jouer du noir (♠ ♣).</p>
+            <p>Un autre <strong>Joker peut toujours être posé</strong>.</p>
+            <h4>🛡️ Blocage</h4>
+            <p>Bloquez avec un 7 ou Joker et renvoyez l'attaque.</p>
+            <h4>🏆 Championnat</h4>
+            <p>Élimination directe. Le perdant est éliminé à chaque duel. Dernier survivant = Champion !</p>
         </div>
     </div>
 </div>
@@ -334,19 +411,27 @@
         <div class="victory-icon">🏆</div>
         <h2>Partie terminée !</h2>
         <div id="finalRanking" class="final-ranking"></div>
-        <button onclick="returnToLobby()" class="btn btn-primary" style="width:100%;margin-top:16px;">
-            🏠 Retour au menu
-        </button>
+        <button onclick="returnToLobby()" class="btn btn-primary" style="width:100%;margin-top:16px;">🏠 Retour au menu</button>
     </div>
 </div>
 
-<!-- ===== NOTIFICATION ===== -->
+<!-- Modal fin de championnat -->
+<div id="tournamentEndModal" class="modal">
+    <div class="modal-content modal-champion">
+        <div class="champion-crown">👑</div>
+        <h2>CHAMPION !</h2>
+        <div id="championName" class="champion-name"></div>
+        <div id="tournamentFinalRanking" class="final-ranking" style="margin-top:24px;"></div>
+        <button onclick="returnToLobbyFromChampion()" class="btn btn-primary" style="width:100%;margin-top:16px;">🏠 Retour au menu</button>
+    </div>
+</div>
+
+<!-- Notification -->
 <div id="notification" class="notification hidden"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/script.js"></script>
 
-<!-- Script pour l'accordéon des règles -->
 <script>
     document.getElementById('rulesToggle').addEventListener('click', function() {
         var body = document.getElementById('rulesBody');
