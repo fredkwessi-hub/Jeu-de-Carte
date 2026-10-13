@@ -1,0 +1,694 @@
+/* ============================================================= */
+/* ============================================================= */
+/* JEU DE CARTES — THÈMES VISUELS                               */
+/* ============================================================= */
+/* Contenu :                                                     */
+/* 1. Thème Dark (par défaut)                                    */
+/* 2. Thème Light                                                */
+/* 3. Thème Neon (cyberpunk)                                     */
+/* 4. Thème Retro (années 80)                                    */
+/* 5. Thème Classic (casino)                                     */
+/* 6. Thème Cosmic (espace)                                      */
+/* 7. Transitions de thème                                       */
+/* ============================================================= */
+
+/* ============================================================= */
+/* 1. THÈME DARK (PAR DÉFAUT)                                    */
+/* ============================================================= */
+/* Note : Ce thème est déjà défini dans main.css (:root).
+   Cette section sert uniquement à documenter les valeurs
+   et permettre la surcharge si nécessaire. */
+
+[data-theme="dark"] {
+    /* ----------------------------------------------------------- */
+    /* FONDS                                                       */
+    /* ----------------------------------------------------------- */
+    --bg-primary: #0F0E1E;
+    --bg-secondary: #1A1A2E;
+    --bg-tertiary: #232141;
+    --bg-card: #1E1D35;
+    --bg-elevated: #26254A;
+    --bg-overlay: rgba(5, 5, 15, 0.85);
+    --bg-glass: rgba(30, 29, 53, 0.7);
+    --bg-glass-light: rgba(255, 255, 255, 0.05);
+
+    /* ----------------------------------------------------------- */
+    /* TEXTES                                                      */
+    /* ----------------------------------------------------------- */
+    --text-primary: #F5F5FF;
+    --text-secondary: #A8A7BE;
+    --text-muted: #6B6A85;
+    --text-disabled: #4A4960;
+
+    /* ----------------------------------------------------------- */
+    /* BORDURES                                                    */
+    /* ----------------------------------------------------------- */
+    --border-color: #33324F;
+    --border-color-light: rgba(255, 255, 255, 0.08);
+    --border-color-strong: rgba(255, 255, 255, 0.15);
+
+    /* ----------------------------------------------------------- */
+    /* COULEURS SPÉCIALES                                          */
+    /* ----------------------------------------------------------- */
+    --color-primary: #6C63FF;
+    --color-secondary: #FF6584;
+    --color-accent: #00D4FF;
+
+    /* ----------------------------------------------------------- */
+    /* FONDS DÉCORATIFS                                            */
+    /* ----------------------------------------------------------- */
+    --bg-orb-1: radial-gradient(circle, rgba(108, 99, 255, 0.7), transparent 70%);
+    --bg-orb-2: radial-gradient(circle, rgba(255, 101, 132, 0.5), transparent 70%);
+    --bg-orb-3: radial-gradient(circle, rgba(0, 212, 255, 0.4), transparent 70%);
+    --bg-grid-color: rgba(108, 99, 255, 0.04);
+    --bg-card-symbol: rgba(108, 99, 255, 0.06);
+
+    /* ----------------------------------------------------------- */
+    /* EFFETS                                                      */
+    /* ----------------------------------------------------------- */
+    --glass-bg: rgba(30, 29, 53, 0.7);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================= */
+/* 2. THÈME LIGHT                                                */
+/* ============================================================= */
+
+[data-theme="light"] {
+    /* ----------------------------------------------------------- */
+    /* FONDS                                                       */
+    /* ----------------------------------------------------------- */
+    --bg-primary: #F4F5FB;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #EAEBF5;
+    --bg-card: #FFFFFF;
+    --bg-elevated: #F8F9FF;
+    --bg-overlay: rgba(244, 245, 251, 0.9);
+    --bg-glass: rgba(255, 255, 255, 0.75);
+    --bg-glass-light: rgba(0, 0, 0, 0.03);
+
+    /* ----------------------------------------------------------- */
+    /* TEXTES                                                      */
+    /* ----------------------------------------------------------- */
+    --text-primary: #1A1A2E;
+    --text-secondary: #5B5A75;
+    --text-muted: #8E8DA5;
+    --text-disabled: #B8B7C9;
+
+    /* ----------------------------------------------------------- */
+    /* BORDURES                                                    */
+    /* ----------------------------------------------------------- */
+    --border-color: #DDDEF0;
+    --border-color-light: rgba(0, 0, 0, 0.06);
+    --border-color-strong: rgba(0, 0, 0, 0.12);
+
+    /* ----------------------------------------------------------- */
+    /* COULEURS SPÉCIALES (légèrement assombries pour contraste)  */
+    /* ----------------------------------------------------------- */
+    --color-primary: #5A52D5;
+    --color-primary-dark: #4A42B5;
+    --color-primary-light: #6C63FF;
+
+    --color-secondary: #E74C6D;
+    --color-secondary-dark: #C73B58;
+
+    --color-accent: #0099CC;
+
+    /* ----------------------------------------------------------- */
+    /* FONDS DÉCORATIFS                                            */
+    /* ----------------------------------------------------------- */
+    --bg-orb-1: radial-gradient(circle, rgba(108, 99, 255, 0.25), transparent 70%);
+    --bg-orb-2: radial-gradient(circle, rgba(255, 101, 132, 0.2), transparent 70%);
+    --bg-orb-3: radial-gradient(circle, rgba(0, 212, 255, 0.15), transparent 70%);
+    --bg-grid-color: rgba(108, 99, 255, 0.08);
+    --bg-card-symbol: rgba(108, 99, 255, 0.1);
+
+    /* ----------------------------------------------------------- */
+    /* EFFETS                                                      */
+    /* ----------------------------------------------------------- */
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: 1px solid rgba(0, 0, 0, 0.06);
+    --glass-shadow: 0 8px 32px rgba(80, 80, 120, 0.12);
+
+    /* Ombres plus douces */
+    --shadow-xs: 0 1px 2px rgba(80, 80, 120, 0.08);
+    --shadow-sm: 0 2px 8px rgba(80, 80, 120, 0.1);
+    --shadow-md: 0 4px 16px rgba(80, 80, 120, 0.12);
+    --shadow-lg: 0 8px 32px rgba(80, 80, 120, 0.15);
+    --shadow-xl: 0 20px 60px rgba(80, 80, 120, 0.2);
+}
+
+/* Cartes sur fond clair : ajouter une bordure subtile */
+[data-theme="light"] .card {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 12px rgba(80, 80, 120, 0.15), 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .bg-card {
+    color: rgba(108, 99, 255, 0.15);
+}
+
+[data-theme="light"] .bg-card:nth-child(even) {
+    color: rgba(255, 101, 132, 0.15);
+}
+
+/* ============================================================= */
+/* 3. THÈME NEON (CYBERPUNK)                                     */
+/* ============================================================= */
+
+[data-theme="neon"] {
+    /* ----------------------------------------------------------- */
+    /* FONDS (très sombres, presque noirs)                         */
+    /* ----------------------------------------------------------- */
+    --bg-primary: #050510;
+    --bg-secondary: #0A0A1A;
+    --bg-tertiary: #12122A;
+    --bg-card: #0F0F25;
+    --bg-elevated: #1A1A35;
+    --bg-overlay: rgba(5, 5, 16, 0.9);
+    --bg-glass: rgba(15, 15, 37, 0.75);
+    --bg-glass-light: rgba(0, 255, 255, 0.05);
+
+    /* ----------------------------------------------------------- */
+    /* TEXTES                                                      */
+    /* ----------------------------------------------------------- */
+    --text-primary: #E0FFFF;
+    --text-secondary: #7EC8E3;
+    --text-muted: #4A6B7C;
+    --text-disabled: #2D3F4A;
+
+    /* ----------------------------------------------------------- */
+    /* BORDURES (néon subtil)                                      */
+    /* ----------------------------------------------------------- */
+    --border-color: #1F3A5F;
+    --border-color-light: rgba(0, 255, 255, 0.15);
+    --border-color-strong: rgba(0, 255, 255, 0.3);
+
+    /* ----------------------------------------------------------- */
+    /* COULEURS SPÉCIALES (néon vif)                               */
+    /* ----------------------------------------------------------- */
+    --color-primary: #00FFFF;
+    --color-primary-dark: #00CCCC;
+    --color-primary-light: #66FFFF;
+    --color-primary-rgb: 0, 255, 255;
+
+    --color-secondary: #FF00FF;
+    --color-secondary-dark: #CC00CC;
+    --color-secondary-light: #FF66FF;
+    --color-secondary-rgb: 255, 0, 255;
+
+    --color-accent: #00FF88;
+    --color-accent-rgb: 0, 255, 136;
+
+    --color-success: #00FF88;
+    --color-warning: #FFCC00;
+    --color-danger: #FF0066;
+
+    /* ----------------------------------------------------------- */
+    /* FONDS DÉCORATIFS (néon intense)                             */
+    /* ----------------------------------------------------------- */
+    --bg-orb-1: radial-gradient(circle, rgba(0, 255, 255, 0.5), transparent 70%);
+    --bg-orb-2: radial-gradient(circle, rgba(255, 0, 255, 0.4), transparent 70%);
+    --bg-orb-3: radial-gradient(circle, rgba(0, 255, 136, 0.3), transparent 70%);
+    --bg-grid-color: rgba(0, 255, 255, 0.08);
+    --bg-card-symbol: rgba(0, 255, 255, 0.12);
+
+    /* ----------------------------------------------------------- */
+    /* EFFETS (glow intense)                                       */
+    /* ----------------------------------------------------------- */
+    --glass-bg: rgba(15, 15, 37, 0.75);
+    --glass-border: 1px solid rgba(0, 255, 255, 0.2);
+    --glass-shadow: 0 8px 32px rgba(0, 255, 255, 0.15);
+
+    --shadow-glow-primary: 0 0 30px rgba(0, 255, 255, 0.6);
+    --shadow-glow-secondary: 0 0 30px rgba(255, 0, 255, 0.6);
+    --shadow-glow-success: 0 0 30px rgba(0, 255, 136, 0.6);
+}
+
+/* Effets néon spéciaux */
+[data-theme="neon"] .title-gradient {
+    background: linear-gradient(135deg, #00FFFF 0%, #FF00FF 50%, #00FF88 100%);
+    background-size: 200% 200%;
+}
+
+[data-theme="neon"] .card {
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    box-shadow:
+            0 0 20px rgba(0, 255, 255, 0.3),
+            0 4px 12px rgba(0, 0, 0, 0.6),
+            inset 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+[data-theme="neon"] .btn-primary {
+    box-shadow:
+            0 0 20px rgba(0, 255, 255, 0.5),
+            0 8px 24px rgba(0, 255, 255, 0.3);
+}
+
+[data-theme="neon"] .glass-card {
+    box-shadow:
+            0 0 40px rgba(0, 255, 255, 0.1),
+            0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="neon"] ::selection {
+    background: rgba(0, 255, 255, 0.4);
+    color: #050510;
+}
+
+[data-theme="neon"] ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #00FFFF, #FF00FF);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+/* ============================================================= */
+/* 4. THÈME RETRO (ANNÉES 80)                                    */
+/* ============================================================= */
+
+[data-theme="retro"] {
+    /* ----------------------------------------------------------- */
+    /* FONDS (bruns chauds, ambiance arcade)                       */
+    /* ----------------------------------------------------------- */
+    --bg-primary: #1A0F1F;
+    --bg-secondary: #2A1A30;
+    --bg-tertiary: #3A253F;
+    --bg-card: #2D1B35;
+    --bg-elevated: #3D2A45;
+    --bg-overlay: rgba(26, 15, 31, 0.9);
+    --bg-glass: rgba(45, 27, 53, 0.8);
+    --bg-glass-light: rgba(255, 200, 100, 0.05);
+
+    /* ----------------------------------------------------------- */
+    /* TEXTES (crème chaud)                                        */
+    /* ----------------------------------------------------------- */
+    --text-primary: #FFE9B8;
+    --text-secondary: #C9A96A;
+    --text-muted: #8A7048;
+    --text-disabled: #5A4530;
+
+    /* ----------------------------------------------------------- */
+    /* BORDURES                                                    */
+    /* ----------------------------------------------------------- */
+    --border-color: #5A3D5F;
+    --border-color-light: rgba(255, 200, 100, 0.12);
+    --border-color-strong: rgba(255, 200, 100, 0.25);
+
+    /* ----------------------------------------------------------- */
+    /* COULEURS SPÉCIALES (chaudes, saturées)                      */
+    /* ----------------------------------------------------------- */
+    --color-primary: #FFB347;
+    --color-primary-dark: #E89520;
+    --color-primary-light: #FFCC80;
+    --color-primary-rgb: 255, 179, 71;
+
+    --color-secondary: #FF5C8A;
+    --color-secondary-dark: #E03A6A;
+    --color-secondary-light: #FF8FAB;
+    --color-secondary-rgb: 255, 92, 138;
+
+    --color-accent: #FFD93D;
+    --color-accent-rgb: 255, 217, 61;
+
+    --color-success: #7DD97D;
+    --color-warning: #FFB347;
+    --color-danger: #FF5C8A;
+
+    /* ----------------------------------------------------------- */
+    /* FONDS DÉCORATIFS                                            */
+    /* ----------------------------------------------------------- */
+    --bg-orb-1: radial-gradient(circle, rgba(255, 179, 71, 0.4), transparent 70%);
+    --bg-orb-2: radial-gradient(circle, rgba(255, 92, 138, 0.35), transparent 70%);
+    --bg-orb-3: radial-gradient(circle, rgba(255, 217, 61, 0.25), transparent 70%);
+    --bg-grid-color: rgba(255, 179, 71, 0.06);
+    --bg-card-symbol: rgba(255, 179, 71, 0.1);
+
+    /* ----------------------------------------------------------- */
+    /* EFFETS (chauds)                                             */
+    /* ----------------------------------------------------------- */
+    --glass-bg: rgba(45, 27, 53, 0.8);
+    --glass-border: 1px solid rgba(255, 200, 100, 0.15);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+
+    --shadow-glow-primary: 0 0 30px rgba(255, 179, 71, 0.5);
+    --shadow-glow-secondary: 0 0 30px rgba(255, 92, 138, 0.5);
+}
+
+/* Effets rétro */
+[data-theme="retro"] .title-gradient {
+    background: linear-gradient(135deg, #FFB347 0%, #FF5C8A 50%, #FFD93D 100%);
+    background-size: 200% 200%;
+}
+
+[data-theme="retro"] .card {
+    background: #FFF5E1;
+    border: 2px solid #8A7048;
+    box-shadow:
+            4px 4px 0 #5A4530,
+            0 4px 12px rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+}
+
+[data-theme="retro"] .card .card-symbol {
+    font-family: var(--font-display);
+}
+
+/* Effet de lignes de balayage (scanlines) */
+[data-theme="retro"] .app-background::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+            0deg,
+            rgba(255, 200, 100, 0.03) 0px,
+            rgba(255, 200, 100, 0.03) 1px,
+            transparent 1px,
+            transparent 3px
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+[data-theme="retro"] .btn-primary {
+    box-shadow:
+            3px 3px 0 #8A7048,
+            0 8px 24px rgba(255, 179, 71, 0.3);
+}
+
+[data-theme="retro"] .glass-card {
+    border: 2px solid rgba(255, 200, 100, 0.2);
+    box-shadow:
+            4px 4px 0 rgba(90, 69, 48, 0.5),
+            0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================================= */
+/* 5. THÈME CLASSIC (CASINO)                                     */
+/* ============================================================= */
+
+[data-theme="classic"] {
+    /* ----------------------------------------------------------- */
+    /* FONDS (tapis vert de casino)                                */
+    /* ----------------------------------------------------------- */
+    --bg-primary: #0B3D2E;
+    --bg-secondary: #0F4A38;
+    --bg-tertiary: #145A45;
+    --bg-card: #0E4433;
+    --bg-elevated: #166349;
+    --bg-overlay: rgba(11, 61, 46, 0.92);
+    --bg-glass: rgba(14, 68, 51, 0.8);
+    --bg-glass-light: rgba(255, 215, 0, 0.05);
+
+    /* ----------------------------------------------------------- */
+    /* TEXTES (or et crème)                                        */
+    /* ----------------------------------------------------------- */
+    --text-primary: #F5F0DC;
+    --text-secondary: #C9BE95;
+    --text-muted: #8A8263;
+    --text-disabled: #5A5540;
+
+    /* ----------------------------------------------------------- */
+    /* BORDURES (dorées)                                           */
+    /* ----------------------------------------------------------- */
+    --border-color: #2A6B52;
+    --border-color-light: rgba(255, 215, 0, 0.12);
+    --border-color-strong: rgba(255, 215, 0, 0.3);
+
+    /* ----------------------------------------------------------- */
+    /* COULEURS SPÉCIALES (or, rouge, noir)                        */
+    /* ----------------------------------------------------------- */
+    --color-primary: #D4AF37;
+    --color-primary-dark: #B8941F;
+    --color-primary-light: #F0D060;
+    --color-primary-rgb: 212, 175, 55;
+
+    --color-secondary: #C0392B;
+    --color-secondary-dark: #A0291E;
+    --color-secondary-light: #E74C3C;
+    --color-secondary-rgb: 192, 57, 43;
+
+    --color-accent: #FFD700;
+    --color-accent-rgb: 255, 215, 0;
+
+    --color-success: #27AE60;
+    --color-warning: #D4AF37;
+    --color-danger: #C0392B;
+
+    /* ----------------------------------------------------------- */
+    /* FONDS DÉCORATIFS                                            */
+    /* ----------------------------------------------------------- */
+    --bg-orb-1: radial-gradient(circle, rgba(212, 175, 55, 0.3), transparent 70%);
+    --bg-orb-2: radial-gradient(circle, rgba(192, 57, 43, 0.25), transparent 70%);
+    --bg-orb-3: radial-gradient(circle, rgba(39, 174, 96, 0.2), transparent 70%);
+    --bg-grid-color: rgba(212, 175, 55, 0.05);
+    --bg-card-symbol: rgba(212, 175, 55, 0.1);
+
+    /* ----------------------------------------------------------- */
+    /* EFFETS (dorés)                                              */
+    /* ----------------------------------------------------------- */
+    --glass-bg: rgba(14, 68, 51, 0.8);
+    --glass-border: 1px solid rgba(255, 215, 0, 0.15);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+
+    --shadow-glow-primary: 0 0 30px rgba(212, 175, 55, 0.5);
+    --shadow-glow-secondary: 0 0 30px rgba(192, 57, 43, 0.5);
+}
+
+/* Effets casino */
+[data-theme="classic"] .title-gradient {
+    background: linear-gradient(135deg, #D4AF37 0%, #F0D060 50%, #FFD700 100%);
+    background-size: 200% 200%;
+}
+
+/* Texture de tapis subtile */
+[data-theme="classic"] .app-background {
+    background-image:
+            radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+            radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 40px 40px, 60px 60px;
+    background-color: var(--bg-primary);
+}
+
+[data-theme="classic"] .card {
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    box-shadow:
+            0 4px 12px rgba(0, 0, 0, 0.5),
+            inset 0 0 20px rgba(212, 175, 55, 0.05);
+}
+
+[data-theme="classic"] .btn-primary {
+    background: linear-gradient(135deg, #D4AF37 0%, #B8941F 100%);
+    color: #0B3D2E;
+    box-shadow:
+            0 0 20px rgba(212, 175, 55, 0.4),
+            0 8px 24px rgba(0, 0, 0, 0.4);
+    font-weight: var(--font-weight-black);
+}
+
+[data-theme="classic"] .glass-card {
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    box-shadow:
+            inset 0 1px 0 rgba(255, 215, 0, 0.1),
+            0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="classic"] ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #D4AF37, #B8941F);
+}
+
+/* ============================================================= */
+/* 6. THÈME COSMIC (ESPACE)                                      */
+/* ============================================================= */
+
+[data-theme="cosmic"] {
+    /* ----------------------------------------------------------- */
+    /* FONDS (nuit profonde)                                       */
+    /* ----------------------------------------------------------- */
+    --bg-primary: #060414;
+    --bg-secondary: #0D0A20;
+    --bg-tertiary: #16122E;
+    --bg-card: #12102A;
+    --bg-elevated: #1C1838;
+    --bg-overlay: rgba(6, 4, 20, 0.92);
+    --bg-glass: rgba(18, 16, 42, 0.75);
+    --bg-glass-light: rgba(180, 130, 255, 0.05);
+
+    /* ----------------------------------------------------------- */
+    /* TEXTES (lavande et blanc stellaire)                         */
+    /* ----------------------------------------------------------- */
+    --text-primary: #F0E8FF;
+    --text-secondary: #B8A8D9;
+    --text-muted: #7868A0;
+    --text-disabled: #4A4060;
+
+    /* ----------------------------------------------------------- */
+    /* BORDURES                                                    */
+    /* ----------------------------------------------------------- */
+    --border-color: #2D2550;
+    --border-color-light: rgba(180, 130, 255, 0.12);
+    --border-color-strong: rgba(180, 130, 255, 0.25);
+
+    /* ----------------------------------------------------------- */
+    /* COULEURS SPÉCIALES (violet cosmique, cyan stellaire)        */
+    /* ----------------------------------------------------------- */
+    --color-primary: #9D6FFF;
+    --color-primary-dark: #7D4FDF;
+    --color-primary-light: #B88FFF;
+    --color-primary-rgb: 157, 111, 255;
+
+    --color-secondary: #FF6BB5;
+    --color-secondary-dark: #E04B95;
+    --color-secondary-light: #FF9DCE;
+    --color-secondary-rgb: 255, 107, 181;
+
+    --color-accent: #7DF9FF;
+    --color-accent-rgb: 125, 249, 255;
+
+    --color-success: #5EE7B8;
+    --color-warning: #FFB85C;
+    --color-danger: #FF6B8A;
+
+    /* ----------------------------------------------------------- */
+    /* FONDS DÉCORATIFS (nébuleuses)                               */
+    /* ----------------------------------------------------------- */
+    --bg-orb-1: radial-gradient(circle, rgba(157, 111, 255, 0.4), transparent 70%);
+    --bg-orb-2: radial-gradient(circle, rgba(255, 107, 181, 0.35), transparent 70%);
+    --bg-orb-3: radial-gradient(circle, rgba(125, 249, 255, 0.25), transparent 70%);
+    --bg-grid-color: rgba(157, 111, 255, 0.06);
+    --bg-card-symbol: rgba(157, 111, 255, 0.12);
+
+    /* ----------------------------------------------------------- */
+    /* EFFETS (lueur cosmique)                                     */
+    /* ----------------------------------------------------------- */
+    --glass-bg: rgba(18, 16, 42, 0.75);
+    --glass-border: 1px solid rgba(180, 130, 255, 0.15);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+
+    --shadow-glow-primary: 0 0 40px rgba(157, 111, 255, 0.5);
+    --shadow-glow-secondary: 0 0 40px rgba(255, 107, 181, 0.5);
+}
+
+/* Effets cosmiques */
+[data-theme="cosmic"] .title-gradient {
+    background: linear-gradient(135deg, #9D6FFF 0%, #FF6BB5 50%, #7DF9FF 100%);
+    background-size: 200% 200%;
+}
+
+/* Étoiles scintillantes */
+[data-theme="cosmic"] .app-background::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+            radial-gradient(1px 1px at 10% 20%, rgba(255, 255, 255, 0.6), transparent),
+            radial-gradient(1px 1px at 80% 40%, rgba(255, 255, 255, 0.5), transparent),
+            radial-gradient(1px 1px at 30% 70%, rgba(255, 255, 255, 0.7), transparent),
+            radial-gradient(1px 1px at 60% 90%, rgba(255, 255, 255, 0.4), transparent),
+            radial-gradient(1px 1px at 45% 15%, rgba(255, 255, 255, 0.5), transparent),
+            radial-gradient(1px 1px at 90% 60%, rgba(255, 255, 255, 0.6), transparent),
+            radial-gradient(2px 2px at 25% 45%, rgba(180, 130, 255, 0.8), transparent),
+            radial-gradient(2px 2px at 70% 25%, rgba(255, 107, 181, 0.7), transparent);
+    background-size: 100% 100%;
+    pointer-events: none;
+    z-index: 1;
+    animation: starsTwinkle 8s ease-in-out infinite;
+}
+
+@keyframes starsTwinkle {
+    0%, 100% { opacity: 0.7; }
+    50%      { opacity: 1; }
+}
+
+[data-theme="cosmic"] .card {
+    border: 1px solid rgba(180, 130, 255, 0.2);
+    box-shadow:
+            0 0 20px rgba(157, 111, 255, 0.2),
+            0 8px 24px rgba(0, 0, 0, 0.5),
+            inset 0 0 20px rgba(180, 130, 255, 0.05);
+}
+
+[data-theme="cosmic"] .btn-primary {
+    background: linear-gradient(135deg, #9D6FFF 0%, #7D4FDF 100%);
+    box-shadow:
+            0 0 30px rgba(157, 111, 255, 0.5),
+            0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="cosmic"] .glass-card {
+    box-shadow:
+            0 0 60px rgba(157, 111, 255, 0.1),
+            0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="cosmic"] ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #9D6FFF, #FF6BB5);
+    box-shadow: 0 0 10px rgba(157, 111, 255, 0.5);
+}
+
+/* ============================================================= */
+/* 7. TRANSITIONS DE THÈME                                       */
+/* ============================================================= */
+
+/* Transition douce lors du changement de thème */
+body,
+.app-background,
+.screen,
+.card,
+.glass-card,
+.btn,
+.input-field {
+    transition:
+            background-color var(--transition-slow),
+            color var(--transition-slow),
+            border-color var(--transition-slow),
+            box-shadow var(--transition-slow);
+}
+
+/* Empêcher la transition sur les éléments animés pendant le changement */
+body.theme-changing * {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* ============================================================= */
+/* SUPPORT DES THÈMES SUR MOBILE                                 */
+/* ============================================================= */
+
+@media (max-width: 768px) {
+    /* Réduire l'intensité des orbes sur mobile pour la performance */
+    .bg-orb {
+        filter: blur(80px);
+        opacity: 0.35;
+    }
+
+    .bg-card {
+        font-size: 40px;
+    }
+}
+
+/* ============================================================= */
+/* SUPPORT DE PREFERS-COLOR-SCHEME                               */
+/* ============================================================= */
+
+/* Si l'utilisateur n'a pas explicitement choisi de thème,
+   on suit ses préférences système (uniquement entre dark et light) */
+@media (prefers-color-scheme: light) {
+    html[data-theme="auto"] {
+        /* Le thème auto adoptera les variables du thème light */
+        --bg-primary: #F4F5FB;
+        --bg-secondary: #FFFFFF;
+        --bg-tertiary: #EAEBF5;
+        --bg-card: #FFFFFF;
+        --bg-elevated: #F8F9FF;
+        --text-primary: #1A1A2E;
+        --text-secondary: #5B5A75;
+        --text-muted: #8E8DA5;
+        --border-color: #DDDEF0;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    html[data-theme="auto"] {
+        /* Le thème auto adoptera les variables du thème dark (déjà par défaut) */
+    }
+}

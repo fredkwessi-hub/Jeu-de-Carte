@@ -1,362 +1,822 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>🃏 Jeu de Cartes — Édition Premium</title>
-    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0F0E1E" />
+    <meta name="description" content="Jeu de cartes multijoueur compétitif avec championnats, IA stratégique et progression ELO." />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="stylesheet" href="/style.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+    <meta name="apple-mobile-web-app-title" content="Jeu de Cartes" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Styles (ordre important : main en premier) -->
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/themes.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/animations.css" />
+    <link rel="stylesheet" href="/css/lobby.css" />
+    <link rel="stylesheet" href="/css/game.css" />
+    <link rel="stylesheet" href="/css/tournament.css" />
+    <link rel="stylesheet" href="/css/responsive.css" />
+
+    <title>🃏 Jeu de Cartes — Édition Premium</title>
 </head>
 <body>
 
-<!-- ===== FOND ANIMÉ ===== -->
-<div class="bg-cards" aria-hidden="true">
-    <div class="bg-card" style="--x: 5%; --delay: 0s; --dur: 22s;">♠</div>
-    <div class="bg-card" style="--x: 18%; --delay: 3s; --dur: 26s;">♥</div>
-    <div class="bg-card" style="--x: 32%; --delay: 6s; --dur: 20s;">♦</div>
-    <div class="bg-card" style="--x: 48%; --delay: 1s; --dur: 28s;">♣</div>
-    <div class="bg-card" style="--x: 63%; --delay: 4s; --dur: 24s;">♠</div>
-    <div class="bg-card" style="--x: 78%; --delay: 7s; --dur: 30s;">♥</div>
-    <div class="bg-card" style="--x: 92%; --delay: 2s; --dur: 25s;">♦</div>
-</div>
-
-<!-- ===== HALOS ===== -->
-<div class="glow glow-1" aria-hidden="true"></div>
-<div class="glow glow-2" aria-hidden="true"></div>
-
-<!-- ===== OVERLAY D'ANIMATION (JOKER, 7, J, AS) ===== -->
-<div id="cardAnimationOverlay" class="card-animation-overlay hidden" aria-hidden="true">
-    <div id="cardAnimationBg" class="card-animation-bg"></div>
-    <div id="cardAnimationContent" class="card-animation-content"></div>
-</div>
-
-<!-- ===== OVERLAY CONFETTIS (victoire) ===== -->
-<div id="confettiOverlay" class="confetti-overlay hidden" aria-hidden="true">
-    <div id="confettiContainer"></div>
+<!-- ============================================================= -->
+<!-- FOND ANIMÉ GLOBAL                                            -->
+<!-- ============================================================= -->
+<div class="app-background" aria-hidden="true">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-cards">
+        <div class="bg-card" style="--x: 5%; --delay: 0s; --dur: 22s;">♠</div>
+        <div class="bg-card" style="--x: 18%; --delay: 3s; --dur: 26s;">♥</div>
+        <div class="bg-card" style="--x: 32%; --delay: 6s; --dur: 20s;">♦</div>
+        <div class="bg-card" style="--x: 48%; --delay: 1s; --dur: 28s;">♣</div>
+        <div class="bg-card" style="--x: 63%; --delay: 4s; --dur: 24s;">♠</div>
+        <div class="bg-card" style="--x: 78%; --delay: 7s; --dur: 30s;">♥</div>
+        <div class="bg-card" style="--x: 92%; --delay: 2s; --dur: 25s;">♦</div>
+    </div>
 </div>
 
 <!-- ============================================================= -->
-<!-- ÉCRAN D'ACCUEIL                                              -->
+<!-- SYSTÈME DE NOTIFICATIONS (TOASTS)                            -->
 <!-- ============================================================= -->
-<div id="lobbyScreen" class="screen active">
-    <div class="lobby-container">
+<div id="toast-container" class="toast-container" aria-live="polite"></div>
 
-        <div class="lobby-logo">
-            <div class="logo-cards">
-                <span class="logo-card logo-card-1">♠</span>
-                <span class="logo-card logo-card-2">♥</span>
-                <span class="logo-card logo-card-3">♦</span>
+<!-- ============================================================= -->
+<!-- OVERLAY DE CHARGEMENT GLOBAL                                 -->
+<!-- ============================================================= -->
+<div id="loading-overlay" class="loading-overlay hidden">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">Chargement...</p>
+</div>
+
+<!-- ============================================================= -->
+<!-- OVERLAY D'ANIMATION DE CARTE (JOKER, 7, J, AS, ROI)          -->
+<!-- ============================================================= -->
+<div id="card-animation-overlay" class="card-animation-overlay hidden" aria-hidden="true">
+    <div id="card-animation-bg" class="card-animation-bg"></div>
+    <div id="card-animation-content" class="card-animation-content"></div>
+</div>
+
+<!-- ============================================================= -->
+<!-- OVERLAY CONFETTIS (VICTOIRE)                                 -->
+<!-- ============================================================= -->
+<div id="confetti-overlay" class="confetti-overlay hidden" aria-hidden="true">
+    <div id="confetti-container"></div>
+</div>
+
+<!-- ============================================================= -->
+<!-- APP PRINCIPALE                                               -->
+<!-- ============================================================= -->
+<div id="app" class="app">
+
+    <!-- ========================================================= -->
+    <!-- ÉCRAN 1 : CHARGEMENT INITIAL                              -->
+    <!-- ========================================================= -->
+    <section id="screen-splash" class="screen screen-splash active" data-screen="splash">
+        <div class="splash-content">
+            <div class="splash-logo">
+                <div class="logo-cards">
+                    <span class="logo-card logo-card-1">♠</span>
+                    <span class="logo-card logo-card-2">♥</span>
+                    <span class="logo-card logo-card-3">♦</span>
+                </div>
+            </div>
+            <h1 class="splash-title">
+                <span class="title-gradient">Jeu de Cartes</span>
+            </h1>
+            <p class="splash-subtitle">Édition Premium</p>
+            <div class="splash-loader">
+                <div class="loader-bar"></div>
             </div>
         </div>
+    </section>
 
-        <h1 class="lobby-title">
-            <span class="title-gradient">Jeu de Cartes</span>
-        </h1>
-        <p class="subtitle">Affrontez vos amis ou l'IA</p>
+    <!-- ========================================================= -->
+    <!-- ÉCRAN 2 : CONNEXION / PROFIL                              -->
+    <!-- ========================================================= -->
+    <section id="screen-login" class="screen screen-login" data-screen="login">
+        <div class="login-container">
 
-        <div class="glass-card">
-            <div class="form-group">
-                <label for="playerName">Votre nom</label>
-                <div class="input-wrapper">
-                    <span class="input-icon">👤</span>
-                    <input type="text" id="playerName" placeholder="Entrez votre nom..." maxlength="20" />
+            <!-- Logo -->
+            <div class="login-header">
+                <div class="login-logo">
+                    <div class="logo-cards-small">
+                        <span class="logo-card-small logo-card-1">♠</span>
+                        <span class="logo-card-small logo-card-2">♥</span>
+                        <span class="logo-card-small logo-card-3">♦</span>
+                    </div>
+                </div>
+                <h2 class="login-title">Bienvenue</h2>
+                <p class="login-subtitle">Choisis ton pseudo pour commencer</p>
+            </div>
+
+            <!-- Formulaire -->
+            <div class="login-card glass-card">
+                <div class="form-group">
+                    <label for="input-username">Ton pseudo</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">👤</span>
+                        <input
+                                type="text"
+                                id="input-username"
+                                class="input-field"
+                                placeholder="Ex: DragonMaster"
+                                maxlength="20"
+                                autocomplete="off"
+                                spellcheck="false"
+                        />
+                        <button id="btn-random-name" class="input-action" title="Nom aléatoire">🎲</button>
+                    </div>
+                    <div id="username-error" class="input-error hidden"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="input-avatar">Avatar</label>
+                    <div id="avatar-selector" class="avatar-selector">
+                        <!-- Généré par JS -->
+                    </div>
+                </div>
+
+                <button id="btn-login" class="btn btn-primary btn-lg btn-block">
+                    <span class="btn-shine"></span>
+                    <span class="btn-icon">🚀</span>
+                    <span class="btn-text">Jouer</span>
+                </button>
+
+                <div class="login-info">
+            <span class="login-info-text">
+              💡 Aucun compte requis — Ton profil est sauvegardé automatiquement
+            </span>
                 </div>
             </div>
 
-            <button id="quickPlayBtn" class="btn btn-quick">
+        </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- ÉCRAN 3 : LOBBY PRINCIPAL                                 -->
+    <!-- ========================================================= -->
+    <section id="screen-lobby" class="screen screen-lobby" data-screen="lobby">
+
+        <!-- Header du lobby -->
+        <header class="lobby-header">
+            <div class="lobby-header-left">
+                <div class="player-mini-profile" id="player-mini-profile">
+                    <div class="player-avatar-small" id="lobby-avatar">👤</div>
+                    <div class="player-info-small">
+                        <span class="player-name-small" id="lobby-username">Joueur</span>
+                        <span class="player-level-small" id="lobby-level">Niveau 1</span>
+                    </div>
+                </div>
+            </div>
+            <div class="lobby-header-right">
+                <button id="btn-theme-toggle" class="btn-icon" title="Changer de thème">🌙</button>
+                <button id="btn-settings" class="btn-icon" title="Paramètres">⚙️</button>
+                <button id="btn-notifications" class="btn-icon" title="Notifications">🔔</button>
+            </div>
+        </header>
+
+        <!-- Contenu principal -->
+        <div class="lobby-content">
+
+            <!-- Barre de stats -->
+            <div class="lobby-stats-bar">
+                <div class="stat-pill">
+                    <span class="stat-pill-emoji">🏆</span>
+                    <span class="stat-pill-label">ELO</span>
+                    <span class="stat-pill-value" id="stat-elo">1000</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="stat-pill-emoji">🔥</span>
+                    <span class="stat-pill-label">Série</span>
+                    <span class="stat-pill-value" id="stat-streak">0</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="stat-pill-emoji">🎮</span>
+                    <span class="stat-pill-label">Parties</span>
+                    <span class="stat-pill-value" id="stat-games">0</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="stat-pill-emoji">✅</span>
+                    <span class="stat-pill-label">Victoires</span>
+                    <span class="stat-pill-value" id="stat-wins">0</span>
+                </div>
+            </div>
+
+            <!-- Cartes d'action principales -->
+            <div class="lobby-actions-grid">
+
+                <!-- Action : Partie rapide -->
+                <button id="btn-quick-play" class="action-card action-card-primary">
+                    <div class="action-card-shine"></div>
+                    <div class="action-card-icon">⚡</div>
+                    <div class="action-card-content">
+                        <h3 class="action-card-title">Partie rapide</h3>
+                        <p class="action-card-desc">Affronte 3 bots avec des difficultés progressives</p>
+                    </div>
+                    <div class="action-card-arrow">→</div>
+                </button>
+
+                <!-- Action : Créer une partie -->
+                <button id="btn-create-game" class="action-card">
+                    <div class="action-card-shine"></div>
+                    <div class="action-card-icon">🎮</div>
+                    <div class="action-card-content">
+                        <h3 class="action-card-title">Créer une partie</h3>
+                        <p class="action-card-desc">Invite tes amis avec un code</p>
+                    </div>
+                    <div class="action-card-arrow">→</div>
+                </button>
+
+                <!-- Action : Rejoindre -->
+                <button id="btn-join-game" class="action-card">
+                    <div class="action-card-shine"></div>
+                    <div class="action-card-icon">🚪</div>
+                    <div class="action-card-content">
+                        <h3 class="action-card-title">Rejoindre</h3>
+                        <p class="action-card-desc">Entre un code de partie</p>
+                    </div>
+                    <div class="action-card-arrow">→</div>
+                </button>
+
+                <!-- Action : Championnat -->
+                <button id="btn-tournament" class="action-card action-card-tournament">
+                    <div class="action-card-shine"></div>
+                    <div class="action-card-icon">🏆</div>
+                    <div class="action-card-content">
+                        <h3 class="action-card-title">Championnat</h3>
+                        <p class="action-card-desc">Tournoi à élimination directe (4 ou 8 joueurs)</p>
+                    </div>
+                    <div class="action-card-arrow">→</div>
+                </button>
+
+            </div>
+
+            <!-- Section : Parties publiques -->
+            <div class="lobby-section">
+                <div class="lobby-section-header">
+                    <h2 class="lobby-section-title">🌐 Parties publiques</h2>
+                    <button id="btn-refresh-rooms" class="btn-ghost btn-sm">🔄 Actualiser</button>
+                </div>
+                <div id="public-rooms-list" class="public-rooms-list">
+                    <div class="empty-state-small">
+                        <p>Chargement des parties...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section : Classement -->
+            <div class="lobby-section">
+                <div class="lobby-section-header">
+                    <h2 class="lobby-section-title">📊 Classement</h2>
+                    <button id="btn-view-leaderboard" class="btn-ghost btn-sm">Voir tout →</button>
+                </div>
+                <div id="leaderboard-preview" class="leaderboard-preview">
+                    <div class="empty-state-small">
+                        <p>Chargement du classement...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section : Succès récents -->
+            <div class="lobby-section">
+                <div class="lobby-section-header">
+                    <h2 class="lobby-section-title">🏅 Succès récents</h2>
+                    <button id="btn-view-achievements" class="btn-ghost btn-sm">Voir tout →</button>
+                </div>
+                <div id="achievements-preview" class="achievements-preview">
+                    <div class="empty-state-small">
+                        <p>Joue pour débloquer des succès !</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Navigation basse (mobile) -->
+        <nav class="lobby-bottom-nav">
+            <button class="bottom-nav-item active" data-nav="home">
+                <span class="bottom-nav-icon">🏠</span>
+                <span class="bottom-nav-label">Accueil</span>
+            </button>
+            <button class="bottom-nav-item" data-nav="friends">
+                <span class="bottom-nav-icon">👥</span>
+                <span class="bottom-nav-label">Amis</span>
+            </button>
+            <button class="bottom-nav-item" data-nav="stats">
+                <span class="bottom-nav-icon">📊</span>
+                <span class="bottom-nav-label">Stats</span>
+            </button>
+            <button class="bottom-nav-item" data-nav="profile">
+                <span class="bottom-nav-icon">👤</span>
+                <span class="bottom-nav-label">Profil</span>
+            </button>
+        </nav>
+
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- ÉCRAN 4 : SALLE D'ATTENTE (PARTIE)                        -->
+    <!-- ========================================================= -->
+    <section id="screen-waiting" class="screen screen-waiting" data-screen="waiting">
+        <div class="waiting-container">
+
+            <div class="waiting-header">
+                <button id="btn-back-lobby" class="btn-icon btn-icon-ghost">←</button>
+                <h2 class="waiting-title">Salle d'attente</h2>
+                <div class="waiting-header-spacer"></div>
+            </div>
+
+            <!-- Code de la partie -->
+            <div class="game-code-card glass-card">
+                <span class="game-code-label">Code de la partie</span>
+                <div class="game-code-display">
+                    <code id="display-game-code">---</code>
+                    <button id="btn-copy-code" class="btn-icon" title="Copier le code">📋</button>
+                </div>
+                <button id="btn-share-code" class="btn btn-secondary btn-sm btn-block">
+                    📤 Partager le code
+                </button>
+            </div>
+
+            <!-- Liste des joueurs -->
+            <div class="players-card glass-card">
+                <div class="players-card-header">
+                    <h3 class="players-card-title">
+                        Joueurs
+                        <span class="players-count">
+                (<span id="waiting-player-count">1</span>/<span id="waiting-max-players">4</span>)
+              </span>
+                    </h3>
+                </div>
+                <div id="waiting-players-list" class="players-list-content"></div>
+            </div>
+
+            <!-- Contrôles de bot -->
+            <div id="bot-controls" class="bot-controls hidden">
+                <div class="bot-controls-header">
+                    <span class="bot-controls-title">🤖 Ajouter un bot</span>
+                </div>
+                <div class="bot-controls-body">
+                    <select id="bot-difficulty" class="input-field">
+                        <option value="easy">😊 Facile</option>
+                        <option value="medium" selected>😐 Moyen</option>
+                        <option value="hard">😈 Difficile</option>
+                        <option value="expert">🔥 Expert</option>
+                    </select>
+                    <button id="btn-add-bot" class="btn btn-secondary btn-sm">
+                        + Ajouter
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bouton démarrer -->
+            <button id="btn-start-game" class="btn btn-primary btn-lg btn-block hidden">
                 <span class="btn-shine"></span>
-                <span class="btn-icon">⚡</span>
-                <span class="btn-text">Partie rapide contre l'IA</span>
+                <span class="btn-icon">🚀</span>
+                <span class="btn-text">Démarrer la partie</span>
             </button>
 
-            <div class="divider"><span>OU</span></div>
+            <p id="waiting-message" class="waiting-message">
+                En attente d'autres joueurs...
+            </p>
 
-            <button id="createGameBtn" class="btn btn-primary">
+        </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- ÉCRAN 5 : JEU PRINCIPAL                                   -->
+    <!-- ========================================================= -->
+    <section id="screen-game" class="screen screen-game" data-screen="game">
+
+        <!-- Header de jeu -->
+        <header class="game-header">
+            <div class="game-header-left">
+                <button id="btn-exit-game" class="btn-icon btn-icon-danger" title="Quitter">
+                    <span class="btn-icon-emoji">✕</span>
+                </button>
+                <div class="game-info">
+                    <span class="game-code-pill" id="game-code-display">---</span>
+                    <span class="game-status-pill" id="game-status">En cours</span>
+                </div>
+            </div>
+            <div class="game-header-actions">
+                <button id="btn-game-chat" class="btn-icon" title="Chat">💬</button>
+                <button id="btn-game-rules" class="btn-icon" title="Règles">📖</button>
+            </div>
+        </header>
+
+        <!-- Zone des adversaires -->
+        <div id="opponents-zone" class="opponents-zone"></div>
+
+        <!-- Zone centrale -->
+        <div class="center-zone">
+
+            <!-- Pile de cartes centrale -->
+            <div class="pile-area">
+                <div class="pile-label">Centre</div>
+                <div class="card-slot">
+                    <div id="center-card-display" class="card center-card"></div>
+                    <div class="card-glow" aria-hidden="true"></div>
+                </div>
+                <div id="pile-count" class="pile-count">0 cartes</div>
+            </div>
+
+            <!-- Banque -->
+            <div class="bank-area">
+                <div class="pile-label">Banque</div>
+                <div id="bank-display" class="card bank-card" title="Piocher une carte">
+                    <div class="bank-inner">🂠</div>
+                </div>
+                <div id="bank-count" class="pile-count">0 cartes</div>
+            </div>
+
+            <!-- Informations de tour -->
+            <div class="turn-info">
+                <div id="current-player-indicator" class="current-player">
+                    ⏳ En attente...
+                </div>
+                <div id="imposed-display" class="imposed-info hidden"></div>
+                <div id="pending-draw-display" class="pending-draw hidden"></div>
+                <div id="direction-indicator" class="direction-indicator hidden"></div>
+            </div>
+
+        </div>
+
+        <!-- Ma main -->
+        <div class="my-hand-zone">
+
+            <div class="hand-header">
+                <div class="hand-title-wrapper">
+                    <span class="hand-title">🖐️ Ma main</span>
+                    <span class="hand-count-badge" id="my-card-count">0</span>
+                </div>
+                <div class="hand-actions">
+                    <button id="btn-play-selected" class="btn btn-primary btn-sm" disabled>
+                        ▶ Jouer
+                    </button>
+                    <button id="btn-draw-card" class="btn btn-secondary btn-sm">
+                        📥 Piocher
+                    </button>
+                </div>
+            </div>
+
+            <div id="my-hand" class="my-hand"></div>
+
+        </div>
+
+        <!-- Panneau de chat (mobile) -->
+        <div id="game-chat-panel" class="game-chat-panel hidden">
+            <div class="chat-panel-header">
+                <span>💬 Chat</span>
+                <button id="btn-close-chat" class="btn-icon btn-icon-sm">✕</button>
+            </div>
+            <div id="chat-messages" class="chat-messages"></div>
+            <div class="chat-input-wrapper">
+                <input
+                        type="text"
+                        id="chat-input"
+                        class="chat-input"
+                        placeholder="Écris un message..."
+                        maxlength="200"
+                />
+                <button id="btn-send-chat" class="btn-icon btn-icon-sm">📤</button>
+            </div>
+        </div>
+
+        <!-- Journal des événements (collapsible) -->
+        <div class="log-panel" id="log-panel">
+            <div class="log-header" id="log-header">
+                <span>📜 Journal</span>
+                <button id="btn-toggle-log" class="btn-icon btn-icon-sm">▼</button>
+            </div>
+            <div id="log-content" class="log-content"></div>
+        </div>
+
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- ÉCRAN 6 : CHAMPIONNAT (SALLE D'ATTENTE)                   -->
+    <!-- ========================================================= -->
+    <section id="screen-tournament-waiting" class="screen screen-tournament" data-screen="tournament-waiting">
+        <div class="waiting-container">
+
+            <div class="waiting-header">
+                <button id="btn-back-lobby-tournament" class="btn-icon btn-icon-ghost">←</button>
+                <h2 class="waiting-title">🏆 Championnat</h2>
+                <div class="waiting-header-spacer"></div>
+            </div>
+
+            <!-- Code du championnat -->
+            <div class="game-code-card glass-card">
+                <span class="game-code-label">Code du championnat</span>
+                <div class="game-code-display">
+                    <code id="display-tournament-code">---</code>
+                    <button id="btn-copy-tournament-code" class="btn-icon" title="Copier">📋</button>
+                </div>
+            </div>
+
+            <!-- Bracket preview -->
+            <div class="bracket-preview glass-card">
+                <h3 class="bracket-preview-title">Arbre du tournoi</h3>
+                <div id="bracket-preview-content" class="bracket-preview-content"></div>
+            </div>
+
+            <!-- Liste des participants -->
+            <div class="players-card glass-card">
+                <div class="players-card-header">
+                    <h3 class="players-card-title">
+                        Participants
+                        <span class="players-count">
+                (<span id="tournament-player-count">1</span>/<span id="tournament-max-players">4</span>)
+              </span>
+                    </h3>
+                </div>
+                <div id="tournament-players-list" class="players-list-content"></div>
+            </div>
+
+            <!-- Contrôles de bot -->
+            <div id="tournament-bot-controls" class="bot-controls hidden">
+                <div class="bot-controls-header">
+                    <span class="bot-controls-title">🤖 Ajouter un bot</span>
+                </div>
+                <div class="bot-controls-body">
+                    <select id="tournament-bot-difficulty" class="input-field">
+                        <option value="easy">😊 Facile</option>
+                        <option value="medium" selected>😐 Moyen</option>
+                        <option value="hard">😈 Difficile</option>
+                        <option value="expert">🔥 Expert</option>
+                    </select>
+                    <button id="btn-add-tournament-bot" class="btn btn-secondary btn-sm">
+                        + Ajouter
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bouton démarrer -->
+            <button id="btn-start-tournament" class="btn btn-primary btn-lg btn-block hidden">
                 <span class="btn-shine"></span>
-                <span class="btn-icon">🎮</span>
-                <span class="btn-text">Créer une partie multijoueur</span>
+                <span class="btn-icon">🚀</span>
+                <span class="btn-text">Démarrer le championnat</span>
             </button>
 
-            <div class="divider"><span>OU</span></div>
+            <p id="tournament-waiting-message" class="waiting-message">
+                En attente de participants...
+            </p>
 
-            <button id="createTournamentBtn" class="btn btn-tournament">
-                <span class="btn-shine"></span>
-                <span class="btn-icon">🏆</span>
-                <span class="btn-text">Mode Championnat</span>
-            </button>
+        </div>
+    </section>
 
-            <div class="divider"><span>OU</span></div>
-
-            <div class="form-group">
-                <label for="gameCodeInput">Code de la partie</label>
-                <div class="input-wrapper">
-                    <span class="input-icon">🔗</span>
-                    <input type="text" id="gameCodeInput" placeholder="Ex: game_abc123" />
+    <!-- ========================================================= -->
+    <!-- ÉCRAN 7 : CHAMPIONNAT EN COURS (BRACKET)                  -->
+    <!-- ========================================================= -->
+    <section id="screen-tournament-bracket" class="screen screen-tournament-bracket" data-screen="tournament-bracket">
+        <header class="game-header">
+            <div class="game-header-left">
+                <button id="btn-exit-tournament" class="btn-icon btn-icon-danger">✕</button>
+                <div class="game-info">
+                    <span class="game-code-pill" id="bracket-tournament-code">---</span>
+                    <span class="game-status-pill" id="bracket-status">En cours</span>
                 </div>
             </div>
-            <button id="joinGameBtn" class="btn btn-secondary">
-                <span class="btn-shine"></span>
-                <span class="btn-icon">🚪</span>
-                <span class="btn-text">Rejoindre une partie</span>
-            </button>
-        </div>
+        </header>
 
-        <!-- Règles -->
-        <div class="rules-accordion">
-            <button class="rules-toggle" id="rulesToggle">
-                <span class="rules-toggle-icon">📖</span>
-                <span class="rules-toggle-text">Comment jouer ?</span>
-                <span class="rules-toggle-arrow">▼</span>
-            </button>
-            <div class="rules-body" id="rulesBody">
-                <div class="rule-item">
-                    <span class="rule-emoji">🎯</span>
-                    <div>
-                        <strong>Superposition</strong>
-                        <p>Même <em>numéro</em> ou même <em>couleur de symbole</em> (♠ ♦ ♥ ♣) que la carte centrale.</p>
+        <div class="bracket-container">
+            <div class="bracket-header">
+                <h2 class="bracket-title">🏆 Arbre du tournoi</h2>
+                <p class="bracket-subtitle" id="bracket-round-info">Tour 1 — Demi-finales</p>
+            </div>
+            <div id="bracket-display" class="bracket-display"></div>
+        </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- ÉCRAN 8 : MODE SPECTATEUR                                 -->
+    <!-- ========================================================= -->
+    <section id="screen-spectator" class="screen screen-spectator" data-screen="spectator">
+        <header class="game-header">
+            <div class="game-header-left">
+                <button id="btn-exit-spectator" class="btn-icon btn-icon-danger">✕</button>
+                <div class="game-info">
+                    <span class="game-code-pill" id="spectator-game-code">---</span>
+                    <span class="game-status-pill status-spectator">👁️ Spectateur</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="spectator-container">
+            <div class="spectator-info glass-card">
+                <span>Tu regardes la partie de <strong id="spectator-players">...</strong></span>
+            </div>
+
+            <!-- Zone des adversaires (identique) -->
+            <div id="spectator-opponents-zone" class="opponents-zone"></div>
+
+            <!-- Zone centrale (identique) -->
+            <div class="center-zone">
+                <div class="pile-area">
+                    <div class="pile-label">Centre</div>
+                    <div class="card-slot">
+                        <div id="spectator-center-card" class="card center-card"></div>
+                        <div class="card-glow"></div>
                     </div>
                 </div>
-                <div class="rule-item">
-                    <span class="rule-emoji">🃏</span>
-                    <div>
-                        <strong>Joker</strong>
-                        <p>Peut être posé sur n'importe quelle carte. <em>+4 cartes</em> au suivant et <em>impose sa couleur</em> (rouge ou noir).</p>
+                <div class="bank-area">
+                    <div class="pile-label">Banque</div>
+                    <div id="spectator-bank-card" class="card bank-card">
+                        <div class="bank-inner">🂠</div>
                     </div>
+                    <div id="spectator-bank-count" class="pile-count">0 cartes</div>
                 </div>
-                <div class="rule-item">
-                    <span class="rule-emoji">🎨</span>
-                    <div>
-                        <strong>Joker imposant sa couleur</strong>
-                        <p>Joker <em>rouge</em> → le suivant doit jouer du rouge (♥ ♦). Joker <em>noir</em> → du noir (♠ ♣). Un autre Joker peut toujours être posé.</p>
-                    </div>
+                <div class="turn-info">
+                    <div id="spectator-turn-info" class="current-player">⏳ En attente...</div>
                 </div>
-                <div class="rule-item">
-                    <span class="rule-emoji">7️⃣</span>
-                    <div>
-                        <strong>Sept</strong>
-                        <p><em>+2 cartes</em> au joueur suivant. Cumulable avec un autre 7 ou Joker.</p>
-                    </div>
+            </div>
+
+            <!-- Journal -->
+            <div class="log-panel">
+                <div class="log-header" id="spectator-log-header">
+                    <span>📜 Journal</span>
+                    <button id="btn-toggle-spectator-log" class="btn-icon btn-icon-sm">▼</button>
                 </div>
-                <div class="rule-item">
-                    <span class="rule-emoji">🅰️</span>
-                    <div>
-                        <strong>As</strong>
-                        <p>Suspend le tour du joueur suivant.</p>
-                    </div>
+                <div id="spectator-log-content" class="log-content"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- ÉCRAN 9 : PROFIL / STATISTIQUES                           -->
+    <!-- ========================================================= -->
+    <section id="screen-profile" class="screen screen-profile" data-screen="profile">
+        <header class="game-header">
+            <div class="game-header-left">
+                <button id="btn-back-lobby-profile" class="btn-icon btn-icon-ghost">←</button>
+                <h2 class="game-header-title">👤 Profil</h2>
+            </div>
+        </header>
+
+        <div class="profile-container">
+
+            <!-- Carte profil -->
+            <div class="profile-card glass-card">
+                <div class="profile-avatar-large" id="profile-avatar">👤</div>
+                <h2 class="profile-username" id="profile-username">Joueur</h2>
+                <div class="profile-level-badge" id="profile-level-badge">Niveau 1</div>
+                <div class="profile-elo-display">
+                    <span class="profile-elo-label">ELO</span>
+                    <span class="profile-elo-value" id="profile-elo">1000</span>
                 </div>
-                <div class="rule-item">
-                    <span class="rule-emoji">🎭</span>
-                    <div>
-                        <strong>Valet (J)</strong>
-                        <p>Impose une couleur de symbole au joueur suivant (♠ ♦ ♥ ♣).</p>
-                    </div>
+                <div class="profile-progress-bar">
+                    <div class="profile-progress-fill" id="profile-progress-fill"></div>
                 </div>
-                <div class="rule-item">
-                    <span class="rule-emoji">🛡️</span>
-                    <div>
-                        <strong>Blocage d'attaque</strong>
-                        <p>Bloquez avec un <em>7</em> ou un <em>Joker</em> et renvoyez l'attaque au suivant.</p>
-                    </div>
+                <p class="profile-progress-text" id="profile-progress-text">0 / 100 XP</p>
+            </div>
+
+            <!-- Statistiques détaillées -->
+            <div class="stats-grid">
+                <div class="stat-card-large glass-card">
+                    <span class="stat-card-emoji">🎮</span>
+                    <span class="stat-card-value" id="profile-games">0</span>
+                    <span class="stat-card-label">Parties jouées</span>
                 </div>
-                <div class="rule-item">
-                    <span class="rule-emoji">📥</span>
-                    <div>
-                        <strong>Piocher</strong>
-                        <p>Si vous ne pouvez pas jouer, piochez et passez votre tour.</p>
-                    </div>
+                <div class="stat-card-large glass-card">
+                    <span class="stat-card-emoji">🏆</span>
+                    <span class="stat-card-value" id="profile-wins">0</span>
+                    <span class="stat-card-label">Victoires</span>
                 </div>
-                <div class="rule-item">
-                    <span class="rule-emoji">🏆</span>
-                    <div>
-                        <strong>Mode Championnat</strong>
-                        <p>Tounoi à élimination directe. Le perdant de chaque duel est éliminé. Le dernier survivant est champion !</p>
+                <div class="stat-card-large glass-card">
+                    <span class="stat-card-emoji">📊</span>
+                    <span class="stat-card-value" id="profile-winrate">0%</span>
+                    <span class="stat-card-label">Taux de victoire</span>
+                </div>
+                <div class="stat-card-large glass-card">
+                    <span class="stat-card-emoji">🔥</span>
+                    <span class="stat-card-value" id="profile-streak">0</span>
+                    <span class="stat-card-label">Meilleure série</span>
+                </div>
+            </div>
+
+            <!-- Succès -->
+            <div class="profile-section glass-card">
+                <h3 class="profile-section-title">🏅 Succès</h3>
+                <div id="profile-achievements" class="achievements-grid"></div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- ÉCRAN 10 : AMIS / SOCIAL                                  -->
+    <!-- ========================================================= -->
+    <section id="screen-friends" class="screen screen-friends" data-screen="friends">
+        <header class="game-header">
+            <div class="game-header-left">
+                <button id="btn-back-lobby-friends" class="btn-icon btn-icon-ghost">←</button>
+                <h2 class="game-header-title">👥 Amis</h2>
+            </div>
+        </header>
+
+        <div class="friends-container">
+
+            <!-- Tabs -->
+            <div class="friends-tabs">
+                <button class="friends-tab active" data-tab="list">👥 Mes amis</button>
+                <button class="friends-tab" data-tab="requests">📨 Demandes</button>
+            </div>
+
+            <!-- Onglet : Liste d'amis -->
+            <div id="friends-tab-list" class="friends-tab-content active">
+                <div id="friends-list" class="friends-list">
+                    <div class="empty-state-small">
+                        <p>Chargement...</p>
                     </div>
                 </div>
             </div>
+
+            <!-- Onglet : Demandes -->
+            <div id="friends-tab-requests" class="friends-tab-content">
+                <div id="friend-requests-list" class="friend-requests-list">
+                    <div class="empty-state-small">
+                        <p>Aucune demande en attente</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ajouter un ami -->
+            <div class="add-friend-section glass-card">
+                <h3>Ajouter un ami</h3>
+                <div class="add-friend-input">
+                    <input
+                            type="text"
+                            id="input-friend-search"
+                            class="input-field"
+                            placeholder="Rechercher un pseudo..."
+                    />
+                    <button id="btn-search-friend" class="btn btn-secondary btn-sm">
+                        🔍
+                    </button>
+                </div>
+                <div id="friend-search-results" class="friend-search-results"></div>
+            </div>
+
         </div>
-    </div>
+    </section>
+
 </div>
 
 <!-- ============================================================= -->
-<!-- ÉCRAN D'ATTENTE PARTIE                                       -->
-<!-- ============================================================= -->
-<div id="waitingScreen" class="screen">
-    <div class="waiting-container">
-        <div class="waiting-header">
-            <h2>⏳ Salle d'attente</h2>
-            <p class="waiting-subtitle">En attente des autres joueurs</p>
-        </div>
-
-        <div class="glass-card game-code-card">
-            <span class="game-code-label">Code de la partie</span>
-            <div class="game-code-display">
-                <code id="displayGameCode">---</code>
-                <button id="copyCodeBtn" class="btn-icon" title="Copier">📋</button>
-            </div>
-        </div>
-
-        <div class="glass-card players-card">
-            <h3>Joueurs (<span id="playerCount">1</span>/<span id="maxPlayers">4</span>)</h3>
-            <div id="waitingPlayersList" class="players-list-content"></div>
-        </div>
-
-        <div class="bot-controls" id="botControls" style="display:none;">
-            <select id="botDifficulty" class="form-control">
-                <option value="easy">😊 Facile</option>
-                <option value="medium" selected>😐 Moyen</option>
-                <option value="hard">😈 Difficile</option>
-            </select>
-            <button id="addBotBtn" class="btn btn-secondary btn-sm">🤖 Ajouter un bot</button>
-        </div>
-
-        <button id="startGameBtn" class="btn btn-primary" style="display:none;">
-            <span class="btn-shine"></span>
-            <span class="btn-icon">🚀</span>
-            <span class="btn-text">Démarrer la partie</span>
-        </button>
-        <p id="waitingMessage" class="waiting-message">En attente d'autres joueurs...</p>
-
-        <button id="backToLobbyBtn" class="btn btn-ghost btn-sm" style="margin-top: 16px;">← Retour au menu</button>
-    </div>
-</div>
-
-<!-- ============================================================= -->
-<!-- ÉCRAN D'ATTENTE CHAMPIONNAT                                  -->
-<!-- ============================================================= -->
-<div id="tournamentScreen" class="screen">
-    <div class="waiting-container">
-        <div class="waiting-header">
-            <h2>🏆 Championnat</h2>
-            <p class="waiting-subtitle" id="tournamentSubtitle">En attente des participants</p>
-        </div>
-
-        <div class="glass-card game-code-card">
-            <span class="game-code-label">Code du championnat</span>
-            <div class="game-code-display">
-                <code id="displayTournamentCode">---</code>
-                <button id="copyTournamentCodeBtn" class="btn-icon" title="Copier">📋</button>
-            </div>
-        </div>
-
-        <div class="glass-card players-card">
-            <h3>Participants (<span id="tournamentPlayerCount">1</span>/<span id="tournamentMaxPlayers">4</span>)</h3>
-            <div id="tournamentPlayersList" class="players-list-content"></div>
-        </div>
-
-        <div class="bot-controls" id="tournamentBotControls" style="display:none;">
-            <select id="tournamentBotDifficulty" class="form-control">
-                <option value="easy">😊 Facile</option>
-                <option value="medium" selected>😐 Moyen</option>
-                <option value="hard">😈 Difficile</option>
-            </select>
-            <button id="addTournamentBotBtn" class="btn btn-secondary btn-sm">🤖 Ajouter un bot</button>
-        </div>
-
-        <button id="startTournamentBtn" class="btn btn-primary" style="display:none;">
-            <span class="btn-shine"></span>
-            <span class="btn-icon">🚀</span>
-            <span class="btn-text">Démarrer le championnat</span>
-        </button>
-        <p id="tournamentWaitingMessage" class="waiting-message">En attente de participants...</p>
-
-        <button id="backToLobbyFromTournamentBtn" class="btn btn-ghost btn-sm" style="margin-top: 16px;">← Retour au menu</button>
-    </div>
-</div>
-
-<!-- ============================================================= -->
-<!-- ÉCRAN DE JEU                                                 -->
-<!-- ============================================================= -->
-<div id="gameScreen" class="screen">
-    <header class="game-header">
-        <div class="game-header-left">
-            <button id="leaveGameBtn" class="btn-icon btn-icon-danger" title="Quitter" aria-label="Quitter la partie">
-                <span class="btn-icon-emoji">✕</span>
-            </button>
-            <div class="game-info">
-                <span class="game-code-pill" id="gameCodeDisplay">---</span>
-                <span class="game-status-pill" id="gameStatus">En cours</span>
-            </div>
-        </div>
-        <div class="game-header-actions">
-            <button id="rulesBtn" class="btn-icon" title="Règles" aria-label="Règles">📖</button>
-        </div>
-    </header>
-
-    <div id="opponentsZone" class="opponents-zone"></div>
-
-    <div class="center-zone">
-        <div class="pile-area">
-            <div class="pile-label">Centre</div>
-            <div class="card-slot">
-                <div id="centerCardDisplay" class="card center-card"></div>
-                <div class="card-glow" aria-hidden="true"></div>
-            </div>
-            <div id="pileCount" class="pile-count">0 cartes</div>
-        </div>
-
-        <div class="bank-area">
-            <div class="pile-label">Banque</div>
-            <div id="bankDisplay" class="card bank-card" title="Piocher une carte">
-                <div class="bank-inner">🂠</div>
-            </div>
-            <div id="bankCount" class="pile-count">0 cartes</div>
-        </div>
-
-        <div class="turn-info">
-            <div id="currentPlayerIndicator" class="current-player">⏳ En attente...</div>
-            <div id="imposedSuitDisplay" class="imposed-suit" style="display:none;"></div>
-            <div id="pendingDrawDisplay" class="pending-draw" style="display:none;"></div>
-        </div>
-    </div>
-
-    <div class="my-hand-zone">
-        <div class="hand-header">
-            <span class="hand-title">🖐️ Ma main (<span id="myCardCount">0</span>)</span>
-            <div class="hand-actions">
-                <button id="playSelectedBtn" class="btn btn-primary btn-sm" disabled>▶ Jouer</button>
-                <button id="drawCardBtn" class="btn btn-secondary btn-sm">📥 Piocher</button>
-            </div>
-        </div>
-        <div id="myHand" class="my-hand"></div>
-    </div>
-
-    <div class="log-panel">
-        <div class="log-header" id="logHeader">
-            <span>📜 Journal</span>
-            <button id="toggleLogBtn" class="btn-icon btn-sm">▼</button>
-        </div>
-        <div id="logContent" class="log-content"></div>
-    </div>
-</div>
-
-<!-- ============================================================= -->
-<!-- MODALS                                                        -->
+<!-- MODALS                                                       -->
 <!-- ============================================================= -->
 
-<!-- Modal choix couleur (J) -->
-<div id="suitModal" class="modal">
+<!-- Modal : Choix de couleur (J) -->
+<div id="modal-suit" class="modal">
     <div class="modal-content modal-suit">
-        <h3>🎭 Choisissez une couleur de symbole</h3>
-        <p class="modal-subtitle">Le joueur suivant devra jouer cette couleur (♠ ♦ ♥ ♣)</p>
+        <h3 class="modal-title">🎭 Choisis une couleur</h3>
+        <p class="modal-subtitle">Le joueur suivant devra jouer cette couleur</p>
         <div class="suit-options">
-            <button class="suit-btn" data-suit="pique"><span class="suit-symbol">♠</span><span class="suit-label">Pique</span></button>
-            <button class="suit-btn" data-suit="carreau"><span class="suit-symbol">♦</span><span class="suit-label">Carreau</span></button>
-            <button class="suit-btn" data-suit="coeur"><span class="suit-symbol">♥</span><span class="suit-label">Coeur</span></button>
-            <button class="suit-btn" data-suit="trefle"><span class="suit-symbol">♣</span><span class="suit-label">Trèfle</span></button>
+            <button class="suit-btn" data-suit="pique">
+                <span class="suit-symbol">♠</span>
+                <span class="suit-label">Pique</span>
+            </button>
+            <button class="suit-btn" data-suit="carreau">
+                <span class="suit-symbol">♦</span>
+                <span class="suit-label">Carreau</span>
+            </button>
+            <button class="suit-btn" data-suit="coeur">
+                <span class="suit-symbol">♥</span>
+                <span class="suit-label">Coeur</span>
+            </button>
+            <button class="suit-btn" data-suit="trefle">
+                <span class="suit-symbol">♣</span>
+                <span class="suit-label">Trèfle</span>
+            </button>
         </div>
     </div>
 </div>
 
-<!-- Modal création championnat -->
-<div id="tournamentModal" class="modal">
+<!-- Modal : Création de championnat -->
+<div id="modal-create-tournament" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>🏆 Créer un championnat</h3>
-            <button class="close-btn" onclick="closeModal('tournamentModal')">&times;</button>
+            <h3 class="modal-title">🏆 Créer un championnat</h3>
+            <button class="close-btn" data-close-modal>×</button>
         </div>
         <p class="modal-subtitle">Choisis le nombre de joueurs</p>
         <div class="tournament-options">
@@ -374,71 +834,180 @@
     </div>
 </div>
 
-<!-- Modal règles -->
-<div id="rulesModal" class="modal">
+<!-- Modal : Rejoindre une partie -->
+<div id="modal-join-game" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>📖 Règles du jeu</h3>
-            <button class="close-btn" onclick="closeModal('rulesModal')">&times;</button>
+            <h3 class="modal-title">🚪 Rejoindre une partie</h3>
+            <button class="close-btn" data-close-modal>×</button>
+        </div>
+        <div class="form-group">
+            <label for="input-game-code">Code de la partie</label>
+            <div class="input-wrapper">
+                <span class="input-icon">🔗</span>
+                <input
+                        type="text"
+                        id="input-game-code"
+                        class="input-field"
+                        placeholder="Ex: game_abc123"
+                        autocomplete="off"
+                        spellcheck="false"
+                />
+            </div>
+            <div id="join-game-error" class="input-error hidden"></div>
+        </div>
+        <button id="btn-confirm-join" class="btn btn-primary btn-block">
+            Rejoindre
+        </button>
+    </div>
+</div>
+
+<!-- Modal : Règles du jeu -->
+<div id="modal-rules" class="modal">
+    <div class="modal-content modal-rules">
+        <div class="modal-header">
+            <h3 class="modal-title">📖 Règles du jeu</h3>
+            <button class="close-btn" data-close-modal>×</button>
         </div>
         <div class="rules-content">
             <h4>🎯 But du jeu</h4>
             <p>Se débarrasser de toutes ses cartes le premier.</p>
+
             <h4>🃏 Superposition</h4>
-            <p>Même <strong>numéro</strong> OU même <strong>couleur de symbole</strong> (♠ ♦ ♥ ♣).</p>
+            <p>On pose une carte si elle a le <strong>même numéro</strong> OU la <strong>même couleur de symbole</strong> (♠ ♦ ♥ ♣) que la carte centrale.</p>
+
             <h4>⚡ Cartes spéciales</h4>
             <ul>
-                <li><strong>Joker</strong> : +4 cartes au suivant et impose sa couleur (rouge/noir)</li>
-                <li><strong>7</strong> : +2 cartes au suivant</li>
-                <li><strong>As</strong> : suspend le suivant</li>
+                <li><strong>Joker</strong> : +4 cartes au joueur suivant et impose sa couleur (rouge/noir)</li>
+                <li><strong>7</strong> : +2 cartes au joueur suivant</li>
+                <li><strong>As</strong> : suspend le joueur suivant</li>
                 <li><strong>J</strong> : impose une couleur de symbole</li>
+                <li><strong>Roi</strong> : inverse le sens du jeu</li>
             </ul>
+
             <h4>🎨 Règle du Joker</h4>
             <p>Joker <strong>rouge</strong> → le suivant doit jouer du rouge (♥ ♦).</p>
             <p>Joker <strong>noir</strong> → le suivant doit jouer du noir (♠ ♣).</p>
             <p>Un autre <strong>Joker peut toujours être posé</strong>.</p>
+
             <h4>🛡️ Blocage</h4>
-            <p>Bloquez avec un 7 ou Joker et renvoyez l'attaque.</p>
-            <h4>🏆 Championnat</h4>
-            <p>Élimination directe. Le perdant est éliminé à chaque duel. Dernier survivant = Champion !</p>
+            <p>Bloquez avec un 7 ou Joker et renvoyez l'attaque au suivant.</p>
+
+            <h4>📥 Piocher</h4>
+            <p>Si vous ne pouvez pas jouer, piochez. <strong>Piocher = passer son tour.</strong></p>
+
+            <h4>🏆 Fin de partie</h4>
+            <p>Le premier à ne plus avoir de cartes gagne. La partie s'arrête dès qu'on connaît le gagnant ET le dernier.</p>
+
+            <h4>👑 Championnat</h4>
+            <p>Tournoi à élimination directe. Le perdant de chaque duel est éliminé. Dernier survivant = Champion !</p>
         </div>
     </div>
 </div>
 
-<!-- Modal fin de partie -->
-<div id="gameOverModal" class="modal">
-    <div class="modal-content modal-victory">
-        <div class="victory-icon">🏆</div>
-        <h2>Partie terminée !</h2>
-        <div id="finalRanking" class="final-ranking"></div>
-        <button onclick="returnToLobby()" class="btn btn-primary" style="width:100%;margin-top:16px;">🏠 Retour au menu</button>
+<!-- Modal : Fin de partie -->
+<div id="modal-game-over" class="modal">
+    <div class="modal-content modal-game-over">
+        <div class="game-over-icon">🏆</div>
+        <h2 class="game-over-title">Partie terminée !</h2>
+        <div id="game-over-ranking" class="game-over-ranking"></div>
+        <button id="btn-game-over-lobby" class="btn btn-primary btn-block">
+            🏠 Retour au menu
+        </button>
     </div>
 </div>
 
-<!-- Modal fin de championnat -->
-<div id="tournamentEndModal" class="modal">
+<!-- Modal : Fin de championnat (Champion) -->
+<div id="modal-tournament-end" class="modal">
     <div class="modal-content modal-champion">
         <div class="champion-crown">👑</div>
-        <h2>CHAMPION !</h2>
-        <div id="championName" class="champion-name"></div>
-        <div id="tournamentFinalRanking" class="final-ranking" style="margin-top:24px;"></div>
-        <button onclick="returnToLobbyFromChampion()" class="btn btn-primary" style="width:100%;margin-top:16px;">🏠 Retour au menu</button>
+        <h2 class="champion-title">CHAMPION !</h2>
+        <div class="champion-name" id="champion-name"></div>
+        <div id="tournament-final-ranking" class="final-ranking"></div>
+        <button id="btn-tournament-end-lobby" class="btn btn-primary btn-block">
+            🏠 Retour au menu
+        </button>
     </div>
 </div>
 
-<!-- Notification -->
-<div id="notification" class="notification hidden"></div>
+<!-- Modal : Paramètres -->
+<div id="modal-settings" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">⚙️ Paramètres</h3>
+            <button class="close-btn" data-close-modal>×</button>
+        </div>
 
+        <div class="settings-list">
+
+            <div class="settings-item">
+                <span class="settings-label">🌙 Thème</span>
+                <select id="setting-theme" class="input-field">
+                    <option value="dark">Sombre</option>
+                    <option value="light">Clair</option>
+                    <option value="neon">Néon</option>
+                    <option value="retro">Rétro</option>
+                    <option value="classic">Classique</option>
+                    <option value="cosmic">Cosmique</option>
+                </select>
+            </div>
+
+            <div class="settings-item">
+                <span class="settings-label">🔊 Sons</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="setting-sound" checked />
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="settings-item">
+                <span class="settings-label">🎵 Musique</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="setting-music" />
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="settings-item">
+                <span class="settings-label">📳 Vibrations</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="setting-haptic" checked />
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="settings-item">
+                <span class="settings-label">🔔 Notifications</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="setting-notifications" checked />
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal : Classement complet -->
+<div id="modal-leaderboard" class="modal">
+    <div class="modal-content modal-leaderboard">
+        <div class="modal-header">
+            <h3 class="modal-title">📊 Classement</h3>
+            <button class="close-btn" data-close-modal>×</button>
+        </div>
+        <div id="leaderboard-full" class="leaderboard-full"></div>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SCRIPTS                                                      -->
+<!-- ============================================================= -->
+
+<!-- Socket.IO (chemin relatif, indispensable pour Render) -->
 <script src="/socket.io/socket.io.js"></script>
-<script src="/script.js"></script>
 
-<script>
-    document.getElementById('rulesToggle').addEventListener('click', function() {
-        var body = document.getElementById('rulesBody');
-        var arrow = document.querySelector('.rules-toggle-arrow');
-        body.classList.toggle('open');
-        arrow.style.transform = body.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
-    });
-</script>
+<!-- Modules JS (ordre important) -->
+<script type="module" src="/js/app.js"></script>
+
 </body>
 </html>

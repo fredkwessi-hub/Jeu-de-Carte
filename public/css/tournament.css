@@ -1,0 +1,1104 @@
+/* ============================================================= */
+/* ============================================================= */
+/* JEU DE CARTES — CHAMPIONNAT                                   */
+/* ============================================================= */
+/* Contenu :                                                     */
+/* 1. Salle d'attente du tournoi                                 */
+/* 2. Bracket preview (dans la salle d'attente)                  */
+/* 3. Bracket visuel complet                                     */
+/* 4. Cartes de match                                            */
+/* 5. Modal de fin de championnat                                */
+/* 6. Historique des matchs                                      */
+/* 7. Animations spécifiques                                     */
+/* 8. Responsive                                                 */
+/* ============================================================= */
+
+/* ============================================================= */
+/* 1. SALLE D'ATTENTE DU TOURNOI                                 */
+/* ============================================================= */
+
+.screen-tournament {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: var(--space-6) var(--space-5);
+    padding-top: calc(var(--header-height) + var(--space-4));
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+/* Le waiting-container est déjà stylisé dans lobby.css
+   On ajoute juste les spécificités du tournoi */
+
+/* ============================================================= */
+/* 2. BRACKET PREVIEW (SALLE D'ATTENTE)                          */
+/* ============================================================= */
+
+.bracket-preview {
+    padding: var(--space-5);
+    overflow-x: auto;
+}
+
+.bracket-preview-title {
+    font-family: var(--font-display);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wide);
+    margin-bottom: var(--space-4);
+}
+
+.bracket-preview-content {
+    display: flex;
+    gap: var(--space-6);
+    align-items: center;
+    min-height: 200px;
+    padding: var(--space-3);
+}
+
+/* Placeholder si le bracket n'est pas encore généré */
+.bracket-preview-content:empty::after {
+    content: '🏆 Le bracket sera généré au démarrage';
+    display: block;
+    width: 100%;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    font-style: italic;
+    padding: var(--space-8);
+}
+
+/* ============================================================= */
+/* 3. BRACKET VISUEL COMPLET                                     */
+/* ============================================================= */
+
+.screen-tournament-bracket {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+.bracket-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding: var(--space-5);
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.bracket-header {
+    text-align: center;
+    padding: var(--space-4);
+}
+
+.bracket-title {
+    font-family: var(--font-display);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-black);
+    background: linear-gradient(135deg, var(--color-warning), #FFD700, var(--color-warning));
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientShift 4s ease infinite;
+    margin-bottom: var(--space-2);
+}
+
+.bracket-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+}
+
+/* --- Affichage du bracket --- */
+.bracket-display {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-8);
+    align-items: stretch;
+    padding: var(--space-4) var(--space-2);
+    overflow-x: auto;
+    min-height: 400px;
+    scrollbar-width: thin;
+}
+
+.bracket-display::-webkit-scrollbar {
+    height: 8px;
+}
+
+.bracket-display::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: var(--radius-full);
+}
+
+/* --- Colonne d'un tour --- */
+.bracket-round {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    justify-content: space-around;
+    min-width: 240px;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.bracket-round-header {
+    position: sticky;
+    top: 0;
+    text-align: center;
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-glass);
+    backdrop-filter: blur(var(--blur-md));
+    -webkit-backdrop-filter: blur(var(--blur-md));
+    border: 1px solid var(--border-color-light);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wider);
+    margin-bottom: var(--space-2);
+    white-space: nowrap;
+}
+
+.bracket-round.active .bracket-round-header {
+    background: linear-gradient(135deg, var(--color-warning), var(--color-warning-dark));
+    color: white;
+    box-shadow: 0 4px 16px rgba(var(--color-warning-rgb), 0.5);
+    animation: roundActivePulse 2s ease-in-out infinite;
+}
+
+@keyframes roundActivePulse {
+    0%, 100% {
+        box-shadow: 0 4px 16px rgba(var(--color-warning-rgb), 0.5);
+    }
+    50% {
+        box-shadow: 0 8px 32px rgba(var(--color-warning-rgb), 0.9);
+    }
+}
+
+.bracket-round.completed .bracket-round-header {
+    background: rgba(var(--color-success-rgb), 0.15);
+    color: var(--color-success);
+    border-color: rgba(var(--color-success-rgb), 0.3);
+}
+
+/* ============================================================= */
+/* 4. CARTES DE MATCH                                            */
+/* ============================================================= */
+
+.match-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-glass);
+    backdrop-filter: blur(var(--blur-md));
+    -webkit-backdrop-filter: blur(var(--blur-md));
+    border: 2px solid var(--border-color-light);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+    transition: var(--transition-bounce);
+    position: relative;
+    overflow: hidden;
+    min-height: 100px;
+    cursor: pointer;
+}
+
+.match-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-primary);
+}
+
+/* --- Match en cours --- */
+.match-card.playing {
+    border-color: var(--color-warning);
+    box-shadow:
+            0 0 30px rgba(var(--color-warning-rgb), 0.4),
+            0 8px 24px rgba(0, 0, 0, 0.4);
+    animation: matchPlayingPulse 2s ease-in-out infinite;
+}
+
+@keyframes matchPlayingPulse {
+    0%, 100% {
+        box-shadow:
+                0 0 30px rgba(var(--color-warning-rgb), 0.4),
+                0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    50% {
+        box-shadow:
+                0 0 45px rgba(var(--color-warning-rgb), 0.8),
+                0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+}
+
+/* --- Match terminé --- */
+.match-card.finished {
+    opacity: 0.85;
+}
+
+/* --- Match en attente --- */
+.match-card.pending {
+    opacity: 0.7;
+}
+
+.match-card.pending::after {
+    content: '⏳ En attente';
+    position: absolute;
+    bottom: var(--space-2);
+    right: var(--space-3);
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wide);
+    font-weight: var(--font-weight-bold);
+}
+
+/* --- Joueur dans un match --- */
+.match-player {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+    transition: var(--transition-normal);
+    position: relative;
+    min-height: 40px;
+}
+
+.match-player + .match-player {
+    margin-top: var(--space-1);
+    border-top: 1px solid var(--border-color-light);
+    padding-top: var(--space-2);
+}
+
+.match-player.winner {
+    background: linear-gradient(90deg, rgba(var(--color-success-rgb), 0.15), transparent);
+    border-left: 3px solid var(--color-success);
+    border-radius: var(--radius-sm);
+}
+
+.match-player.loser {
+    opacity: 0.5;
+    text-decoration: line-through;
+    text-decoration-color: var(--color-danger);
+    text-decoration-thickness: 2px;
+}
+
+.match-player.bye {
+    opacity: 0.4;
+    font-style: italic;
+}
+
+.match-player.me {
+    background: rgba(var(--color-primary-rgb), 0.1);
+    border-left: 3px solid var(--color-primary);
+    border-radius: var(--radius-sm);
+}
+
+/* --- Avatar du joueur --- */
+.match-player-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-elevated);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    border: 2px solid var(--border-color);
+    position: relative;
+}
+
+.match-player.winner .match-player-avatar {
+    border-color: var(--color-success);
+    box-shadow: 0 0 12px rgba(var(--color-success-rgb), 0.6);
+}
+
+.match-player.me .match-player-avatar {
+    border-color: var(--color-primary);
+}
+
+/* --- Nom du joueur --- */
+.match-player-name {
+    flex: 1;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.match-player.winner .match-player-name {
+    font-weight: var(--font-weight-bold);
+    color: var(--color-success);
+}
+
+/* --- Badge bot --- */
+.match-player-bot {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: white;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+/* --- Score / Indicateur --- */
+.match-player-score {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-muted);
+    flex-shrink: 0;
+    padding: 2px 6px;
+    background: var(--bg-glass-light);
+    border-radius: var(--radius-sm);
+}
+
+.match-player.winner .match-player-score {
+    color: var(--color-success);
+    background: rgba(var(--color-success-rgb), 0.15);
+}
+
+/* --- VS separator --- */
+.match-vs {
+    text-align: center;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-black);
+    color: var(--text-muted);
+    letter-spacing: var(--letter-spacing-wider);
+    text-transform: uppercase;
+    padding: var(--space-1) 0;
+    position: relative;
+}
+
+.match-vs::before,
+.match-vs::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 35%;
+    height: 1px;
+    background: var(--border-color-light);
+}
+
+.match-vs::before { left: 0; }
+.match-vs::after { right: 0; }
+
+/* --- Connexions entre les matchs (lignes) --- */
+.bracket-round:not(:last-child) .match-card::after {
+    content: '';
+    position: absolute;
+    right: -32px;
+    top: 50%;
+    width: 32px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--border-color), transparent);
+    pointer-events: none;
+}
+
+/* ============================================================= */
+/* 5. MODAL DE FIN DE CHAMPIONNAT                                */
+/* ============================================================= */
+
+.modal-champion {
+    text-align: center;
+    background: linear-gradient(
+            135deg,
+            rgba(30, 29, 53, 0.98) 0%,
+            rgba(60, 40, 20, 0.98) 100%
+    );
+    border: 2px solid var(--color-warning);
+    box-shadow:
+            0 0 60px rgba(var(--color-warning-rgb), 0.6),
+            0 20px 60px rgba(0, 0, 0, 0.7);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Effet de rayons lumineux en fond */
+.modal-champion::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background:
+            conic-gradient(
+                    from 0deg,
+                    transparent 0deg,
+                    rgba(var(--color-warning-rgb), 0.1) 30deg,
+                    transparent 60deg,
+                    transparent 360deg
+            );
+    animation: championRays 20s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes championRays {
+    to { transform: rotate(360deg); }
+}
+
+.modal-champion > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* --- Couronne du champion --- */
+.champion-crown {
+    font-size: 100px;
+    line-height: 1;
+    margin-bottom: var(--space-3);
+    animation: crownBounce 1.5s ease-in-out infinite;
+    filter: drop-shadow(0 8px 32px rgba(var(--color-warning-rgb), 0.8));
+    display: inline-block;
+}
+
+@keyframes crownBounce {
+    0%, 100% {
+        transform: translateY(0) scale(1) rotate(-5deg);
+    }
+    50% {
+        transform: translateY(-14px) scale(1.1) rotate(5deg);
+    }
+}
+
+/* --- Titre champion --- */
+.champion-title {
+    font-family: var(--font-display);
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-black);
+    letter-spacing: var(--letter-spacing-wider);
+    background: linear-gradient(135deg, #FFD700, var(--color-warning), #FFD700);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: var(--space-4);
+    animation: gradientShift 3s ease infinite, championGlow 2s ease-in-out infinite;
+    text-transform: uppercase;
+}
+
+@keyframes championGlow {
+    0%, 100% {
+        filter: brightness(1) drop-shadow(0 0 20px rgba(var(--color-warning-rgb), 0.5));
+    }
+    50% {
+        filter: brightness(1.4) drop-shadow(0 0 40px rgba(var(--color-warning-rgb), 0.9));
+    }
+}
+
+/* --- Nom du champion --- */
+.champion-name {
+    font-family: var(--font-display);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-black);
+    color: white;
+    padding: var(--space-4) var(--space-6);
+    background: linear-gradient(
+            135deg,
+            rgba(var(--color-warning-rgb), 0.3),
+            rgba(var(--color-warning-rgb), 0.15)
+    );
+    border: 2px solid var(--color-warning);
+    border-radius: var(--radius-lg);
+    margin: 0 auto var(--space-5);
+    display: inline-block;
+    box-shadow:
+            0 8px 32px rgba(var(--color-warning-rgb), 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    animation: championNameIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-width: 100%;
+    word-wrap: break-word;
+}
+
+@keyframes championNameIn {
+    from {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* --- Classement final --- */
+.final-ranking {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.final-ranking .ranking-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: rgba(15, 14, 30, 0.6);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    border: 1px solid var(--border-color-light);
+    transition: var(--transition-normal);
+    animation: rankingItemIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+.final-ranking .ranking-item:nth-child(1) { animation-delay: 0.1s; }
+.final-ranking .ranking-item:nth-child(2) { animation-delay: 0.2s; }
+.final-ranking .ranking-item:nth-child(3) { animation-delay: 0.3s; }
+.final-ranking .ranking-item:nth-child(4) { animation-delay: 0.4s; }
+.final-ranking .ranking-item:nth-child(5) { animation-delay: 0.5s; }
+.final-ranking .ranking-item:nth-child(6) { animation-delay: 0.6s; }
+.final-ranking .ranking-item:nth-child(7) { animation-delay: 0.7s; }
+.final-ranking .ranking-item:nth-child(8) { animation-delay: 0.8s; }
+
+@keyframes rankingItemIn {
+    from {
+        transform: translateX(-40px) scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.final-ranking .ranking-item.winner {
+    background: linear-gradient(
+            135deg,
+            rgba(var(--color-warning-rgb), 0.3),
+            rgba(var(--color-primary-rgb), 0.2)
+    );
+    border: 2px solid var(--color-warning);
+    box-shadow:
+            0 0 30px rgba(var(--color-warning-rgb), 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: scale(1.03);
+    animation: winnerPulse 2s ease-in-out infinite;
+    animation-delay: 0.9s;
+}
+
+@keyframes winnerPulse {
+    0%, 100% {
+        box-shadow:
+                0 0 30px rgba(var(--color-warning-rgb), 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        transform: scale(1.03);
+    }
+    50% {
+        box-shadow:
+                0 0 50px rgba(var(--color-warning-rgb), 0.9),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+    }
+}
+
+.final-ranking .ranking-position {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-black);
+    min-width: 44px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.final-ranking .ranking-name {
+    flex: 1;
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.final-ranking .ranking-item.winner .ranking-name {
+    font-size: var(--font-size-lg);
+    color: white;
+}
+
+/* ============================================================= */
+/* 6. HISTORIQUE DES MATCHS                                      */
+/* ============================================================= */
+
+.match-history {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    background: var(--bg-glass);
+    backdrop-filter: blur(var(--blur-md));
+    -webkit-backdrop-filter: blur(var(--blur-md));
+    border: 1px solid var(--border-color-light);
+    border-radius: var(--radius-lg);
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.match-history::-webkit-scrollbar {
+    width: 6px;
+}
+
+.match-history::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: var(--radius-full);
+}
+
+.match-history-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-glass-light);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    transition: var(--transition-normal);
+    animation: chatMessageIn 0.3s ease;
+}
+
+.match-history-item:hover {
+    background: var(--bg-tertiary);
+    transform: translateX(4px);
+}
+
+.match-history-round {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wide);
+    min-width: 60px;
+    flex-shrink: 0;
+}
+
+.match-history-players {
+    flex: 1;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.match-history-winner {
+    font-weight: var(--font-weight-bold);
+    color: var(--color-success);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 120px;
+}
+
+/* ============================================================= */
+/* 7. ANIMATIONS SPÉCIFIQUES                                     */
+/* ============================================================= */
+
+/* --- Apparition d'un nouveau tour --- */
+.bracket-round.new-round {
+    animation: newRoundIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes newRoundIn {
+    from {
+        transform: translateX(40px) scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
+/* --- Transition d'un match terminé --- */
+.match-card.just-finished {
+    animation: matchFinished 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes matchFinished {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 40px rgba(var(--color-success-rgb), 0.8);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* --- Célébration du champion (burst) --- */
+.champion-crown.burst {
+    animation: crownBurst 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes crownBurst {
+    0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.4) rotate(15deg);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+/* --- Étoiles autour du champion --- */
+.champion-stars {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.champion-star {
+    position: absolute;
+    font-size: 24px;
+    animation: starFloat 3s ease-in-out infinite;
+    opacity: 0.8;
+    filter: drop-shadow(0 0 12px rgba(var(--color-warning-rgb), 0.9));
+}
+
+.champion-star:nth-child(1) { top: 10%; left: 15%; animation-delay: 0s; }
+.champion-star:nth-child(2) { top: 20%; right: 10%; animation-delay: 0.5s; }
+.champion-star:nth-child(3) { bottom: 25%; left: 8%; animation-delay: 1s; }
+.champion-star:nth-child(4) { bottom: 15%; right: 20%; animation-delay: 1.5s; }
+.champion-star:nth-child(5) { top: 50%; left: 5%; animation-delay: 2s; }
+.champion-star:nth-child(6) { top: 45%; right: 5%; animation-delay: 2.5s; }
+
+@keyframes starFloat {
+    0%, 100% {
+        transform: translateY(0) scale(1) rotate(0deg);
+        opacity: 0.6;
+    }
+    50% {
+        transform: translateY(-15px) scale(1.2) rotate(180deg);
+        opacity: 1;
+    }
+}
+
+/* --- Progression du bracket (barre) --- */
+.bracket-progress {
+    width: 100%;
+    height: 6px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin: var(--space-3) 0;
+}
+
+.bracket-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-warning), #FFD700);
+    border-radius: var(--radius-full);
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.bracket-progress-fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.4),
+            transparent
+    );
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+/* --- Badge de tour actif --- */
+.round-active-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 4px 10px;
+    background: linear-gradient(135deg, var(--color-warning), var(--color-warning-dark));
+    color: white;
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+    animation: roundActivePulse 2s ease-in-out infinite;
+    margin-left: var(--space-2);
+}
+
+/* ============================================================= */
+/* 8. RESPONSIVE                                                 */
+/* ============================================================= */
+
+@media (max-width: 768px) {
+    .bracket-display {
+        gap: var(--space-5);
+        padding: var(--space-3) var(--space-1);
+    }
+
+    .bracket-round {
+        min-width: 200px;
+    }
+
+    .bracket-round-header {
+        font-size: 10px;
+        padding: var(--space-1) var(--space-2);
+    }
+
+    .match-card {
+        padding: var(--space-2);
+        min-height: 90px;
+    }
+
+    .match-player {
+        padding: var(--space-1);
+        min-height: 36px;
+    }
+
+    .match-player-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
+
+    .match-player-name {
+        font-size: var(--font-size-xs);
+    }
+
+    .champion-crown {
+        font-size: 72px;
+    }
+
+    .champion-title {
+        font-size: var(--font-size-3xl);
+    }
+
+    .champion-name {
+        font-size: var(--font-size-xl);
+        padding: var(--space-3) var(--space-4);
+    }
+
+    .final-ranking .ranking-item {
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--font-size-sm);
+    }
+
+    .final-ranking .ranking-position {
+        font-size: var(--font-size-xl);
+        min-width: 36px;
+    }
+
+    .match-history-round {
+        font-size: 10px;
+        min-width: 50px;
+    }
+
+    .match-history-players {
+        font-size: var(--font-size-xs);
+    }
+
+    .match-history-winner {
+        font-size: var(--font-size-xs);
+        max-width: 90px;
+    }
+}
+
+@media (max-width: 480px) {
+    .bracket-preview {
+        padding: var(--space-3);
+    }
+
+    .bracket-preview-content {
+        gap: var(--space-4);
+        min-height: 150px;
+    }
+
+    .bracket-header {
+        padding: var(--space-3);
+    }
+
+    .bracket-title {
+        font-size: var(--font-size-xl);
+    }
+
+    .bracket-subtitle {
+        font-size: var(--font-size-xs);
+    }
+
+    .bracket-display {
+        gap: var(--space-4);
+        min-height: 300px;
+    }
+
+    .bracket-round {
+        min-width: 160px;
+    }
+
+    .match-card {
+        padding: var(--space-2);
+        min-height: 80px;
+        border-radius: var(--radius-md);
+    }
+
+    .match-player-avatar {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+        border-width: 1px;
+    }
+
+    .match-player-name {
+        font-size: 11px;
+    }
+
+    .match-player-bot {
+        font-size: 8px;
+        padding: 1px 4px;
+    }
+
+    .match-player-score {
+        font-size: 10px;
+        padding: 1px 4px;
+    }
+
+    .match-vs {
+        font-size: 10px;
+    }
+
+    .modal-champion {
+        padding: var(--space-5) var(--space-4);
+    }
+
+    .champion-crown {
+        font-size: 60px;
+        margin-bottom: var(--space-2);
+    }
+
+    .champion-title {
+        font-size: var(--font-size-2xl);
+        letter-spacing: var(--letter-spacing-wide);
+    }
+
+    .champion-name {
+        font-size: var(--font-size-lg);
+        padding: var(--space-2) var(--space-3);
+    }
+
+    .final-ranking .ranking-item {
+        padding: var(--space-2);
+        font-size: var(--font-size-xs);
+        gap: var(--space-2);
+    }
+
+    .final-ranking .ranking-position {
+        font-size: var(--font-size-lg);
+        min-width: 32px;
+    }
+
+    .final-ranking .ranking-item.winner .ranking-name {
+        font-size: var(--font-size-base);
+    }
+
+    .champion-star {
+        font-size: 18px;
+    }
+
+    .match-history {
+        padding: var(--space-3);
+        max-height: 200px;
+    }
+
+    .match-history-item {
+        padding: var(--space-2);
+        font-size: var(--font-size-xs);
+        gap: var(--space-2);
+    }
+}
+
+/* Paysage */
+@media (max-height: 500px) and (orientation: landscape) {
+    .bracket-container {
+        padding: var(--space-2);
+        gap: var(--space-3);
+    }
+
+    .bracket-header {
+        padding: var(--space-2);
+    }
+
+    .bracket-title {
+        font-size: var(--font-size-lg);
+        margin-bottom: var(--space-1);
+    }
+
+    .bracket-subtitle {
+        font-size: 10px;
+    }
+
+    .bracket-display {
+        min-height: 200px;
+        gap: var(--space-4);
+        padding: var(--space-2) var(--space-1);
+    }
+
+    .bracket-round {
+        min-width: 180px;
+        gap: var(--space-2);
+    }
+
+    .bracket-round-header {
+        font-size: 10px;
+        padding: 4px 8px;
+        margin-bottom: var(--space-1);
+    }
+
+    .match-card {
+        padding: var(--space-2);
+        min-height: 70px;
+    }
+
+    .match-player {
+        padding: var(--space-1);
+        min-height: 30px;
+    }
+
+    .match-player + .match-player {
+        margin-top: 2px;
+        padding-top: var(--space-1);
+    }
+
+    .match-player-avatar {
+        width: 22px;
+        height: 22px;
+        font-size: 11px;
+    }
+
+    .match-player-name {
+        font-size: 11px;
+    }
+}
+
+/* ============================================================= */
+/* FIN DU FICHIER TOURNAMENT.CSS                                 */
+/* ============================================================= */
